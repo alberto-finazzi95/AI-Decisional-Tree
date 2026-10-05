@@ -20,7 +20,7 @@ def config_error(func):
 
 
 class ConfigParserBase(ABC):
-    CHAR_TO_REMOVE: str = '\"'
+    CHAR_TO_REMOVE: str = "\""
 
     def __init__(self, folder_manager: cm.FolderManager, config: None | configparser.ConfigParser = None):
         self._folder_manager: cm.FolderManager = folder_manager
@@ -29,7 +29,7 @@ class ConfigParserBase(ABC):
         self.config.read(self._config_file)
 
     def _remove_characters(self, value: str) -> str:
-        return value.replace(self.CHAR_TO_REMOVE, '')
+        return value.replace(self.CHAR_TO_REMOVE, "")
 
     @config_error
     def get(self, section: ds.Section, option: ds.Option, to_remove: bool = True) -> str:

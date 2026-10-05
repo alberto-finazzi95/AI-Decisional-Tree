@@ -12,9 +12,5 @@ class ConfigParser(cpb.ConfigParserBase):
         return self.get(ds.Section.DATASET, ds.Option.NAME)
 
     @property
-    def dataset_download_path(self) -> str:
-        return self.get(ds.Section.DATASET, ds.Option.DOWNLOAD_PATH)
-
-    @property
-    def dataset_extract_path(self) -> str:
-        return self.get(ds.Section.DATASET, ds.Option.EXTRACT_PATH)
+    def dataset_output_path(self) -> str:
+        return self.get(ds.Section.DATASET, ds.Option.OUTPUT_PATH)

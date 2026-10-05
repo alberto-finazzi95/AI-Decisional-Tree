@@ -7,25 +7,27 @@ class DataLoader:
             self,
             folder_manager: cm.FolderManager,
             config_parser: cp.ConfigParser,
+            os_manager: cm.OsManager | None = None
     ):
-        self._folder_manager: cm.FolderManager  = folder_manager
-        self._config_parser: cp.ConfigParser    = config_parser
+        self._folder_manager: cm.FolderManager = folder_manager
+        self._config_parser: cp.ConfigParser = config_parser
+        self._os_manager: cm.OsManager = os_manager if os_manager is not None else cm.OsWrapper()
+        self._kaggle_dataset_name: str = self._config_parser.dataset_name
+        self._dataset_name: str = self._config_parser.dataset_output_path
+        self._dataset_extract_path: str = self._folder_manager.get_folder_path(
+            folder_name=self._config_parser.dataset_output_path,
+            str_format=True,
+        )
 
-        # General configuration parameters
-        self._set_configuration()
-        self._create_folders()
+    def folder_exists(self, folder_path: str) -> bool:
+        return self._os_manager.exists(folder_path) and self._os_manager.is_dir(folder_path)
 
-    def _set_configuration(self):
-        # Set configuration parameters for data loading
-        self._dataset_name: str = self._config_parser.dataset_name
-        self._dataset_download_path: str = self._config_parser.dataset_download_path
-        self._dataset_extract_path: str = self._config_parser.dataset_extract_path
-
-    def _create_folders(self):
-        # Create necessary folders for data loading
-        self._folder_manager.create_folder(self._dataset_download_path)
-        self._folder_manager.create_folder(self._dataset_extract_path)
-
-    def load_data(self):
-        # Implement the logic to load data from the specified path
-        pass
+    def load_data(self) -> str:
+        if self.folder_exists(self._dataset_extract_path):
+            print(f"Dataset found at {self._dataset_extract_path}. Skipping the download...")
+            return self._dataset_extract_path
+        print(f"Loading {self._kaggle_dataset_name} from Kaggle; completed downloads will be reused.")
+        return self._os_manager.download_dataset(
+            self._kaggle_dataset_name,
+            self._dataset_extract_path,
+        )
