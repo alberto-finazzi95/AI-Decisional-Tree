@@ -1,5 +1,3 @@
-from kagglehub import KaggleDatasetAdapter
-
 import os
 import subprocess
 import zipfile
@@ -17,15 +15,13 @@ import src.common.os_manager as osm
 class OsWrapper(osm.OsManager):
     def download_dataset(self, dataset_name: str, output_dir: str) -> str:
         try:
-            return kagglehub.dataset_download(
-            KaggleDatasetAdapter.PANDAS, dataset_name, output_dir=output_dir)
+            return kagglehub.dataset_download(dataset_name, output_dir=output_dir)
         except SSLError as error:
             if "CERTIFICATE_VERIFY_FAILED" not in str(error):
                 raise
             print("Certificate verification failed; retrying with system certificates.")
             truststore.inject_into_ssl()
-            return kagglehub.dataset_download(
-            KaggleDatasetAdapter.PANDAS, dataset_name, output_dir=output_dir)
+            return kagglehub.dataset_download(dataset_name, output_dir=output_dir)
 
     def system(self, command_list: list[str]) -> int:
         return subprocess.run(command_list, check=True).returncode

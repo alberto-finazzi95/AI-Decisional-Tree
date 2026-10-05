@@ -219,4 +219,4 @@ __marimo__/
 
 # IDEs paths
 .idea/
-file/
+file*/

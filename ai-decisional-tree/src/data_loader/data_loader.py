@@ -1,8 +1,10 @@
 import src.common as cm
 import src.config_parser as cp
+import src.data_loader.exceptions as ex
 
 
 class DataLoader:
+    TENTATIVES: int = 4
     def __init__(
             self,
             folder_manager: cm.FolderManager,
@@ -27,7 +29,12 @@ class DataLoader:
             print(f"Dataset found at {self._dataset_extract_path}. Skipping the download...")
             return self._dataset_extract_path
         print(f"Loading {self._kaggle_dataset_name} from Kaggle; completed downloads will be reused.")
-        return self._os_manager.download_dataset(
-            self._kaggle_dataset_name,
-            self._dataset_extract_path,
-        )
+        for tent in range(DataLoader.TENTATIVES):
+            try:
+                return self._os_manager.download_dataset(
+                    self._kaggle_dataset_name,
+                    self._dataset_extract_path,
+                )
+            except Exception as e:
+                print(f"Attempt {tent + 1} failed with error: {e}")
+        raise ex.DatasetLoadError(self._kaggle_dataset_name, self.TENTATIVES)
