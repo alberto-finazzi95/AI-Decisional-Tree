@@ -5,7 +5,7 @@ from requests.exceptions import SSLError
 
 from src.common import FolderManager, OsManager
 from src.config_parser import ConfigParser
-from src.data_loader import DataLoader
+from src.data.data_loader import DataLoader
 
 
 class DataLoaderTests(unittest.TestCase):

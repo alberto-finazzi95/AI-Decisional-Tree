@@ -1,9 +1,10 @@
 import src.common as cm
 import src.config_parser as cp
-import src.data_loader.exceptions as ex
+import src.data.common as dcm
+import src.data.data_loader.exceptions as ex
 
 
-class DataLoader:
+class DataLoader(dcm.BaseData):
     TENTATIVES: int = 4
     def __init__(
             self,
@@ -11,18 +12,17 @@ class DataLoader:
             config_parser: cp.ConfigParser,
             os_manager: cm.OsManager | None = None
     ):
-        self._folder_manager: cm.FolderManager = folder_manager
-        self._config_parser: cp.ConfigParser = config_parser
-        self._os_manager: cm.OsManager = os_manager if os_manager is not None else cm.OsWrapper()
+        super().__init__(
+            folder_manager=folder_manager,
+            config_parser=config_parser,
+            os_manager=os_manager,
+        )
         self._kaggle_dataset_name: str = self._config_parser.dataset_name
         self._dataset_name: str = self._config_parser.dataset_output_path
         self._dataset_extract_path: str = self._folder_manager.get_folder_path(
             folder_name=self._config_parser.dataset_output_path,
             str_format=True,
         )
-
-    def folder_exists(self, folder_path: str) -> bool:
-        return self._os_manager.exists(folder_path) and self._os_manager.is_dir(folder_path)
 
     def load_data(self) -> str:
         if self.folder_exists(self._dataset_extract_path):

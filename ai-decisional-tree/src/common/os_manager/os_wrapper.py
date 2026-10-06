@@ -1,7 +1,4 @@
 import os
-import subprocess
-import zipfile
-import zlib
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -23,12 +20,6 @@ class OsWrapper(osm.OsManager):
             truststore.inject_into_ssl()
             return kagglehub.dataset_download(dataset_name, output_dir=output_dir)
 
-    def system(self, command_list: list[str]) -> int:
-        return subprocess.run(command_list, check=True).returncode
-
-    def abspath(self, path: str) -> str:
-        return os.path.abspath(path)
-
     def dirname(self, path: str) -> str:
         return os.path.dirname(path)
 
@@ -37,13 +28,6 @@ class OsWrapper(osm.OsManager):
 
     def is_file(self, path: str | Path) -> bool:
         return Path(path).is_file()
-
-    def is_valid_zip(self, path: str | Path) -> bool:
-        try:
-            with zipfile.ZipFile(path) as archive:
-                return archive.testzip() is None
-        except (zipfile.BadZipFile, zlib.error):
-            return False
 
     def is_dir(self, path: str | Path) -> bool:
         return Path(path).is_dir()

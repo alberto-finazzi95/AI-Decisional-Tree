@@ -8,14 +8,6 @@ class OsManager(ABC):
         pass
 
     @abstractmethod
-    def system(self, command_list: list[str]) -> int:
-        pass
-
-    @abstractmethod
-    def abspath(self, path: str) -> str:
-        pass
-
-    @abstractmethod
     def dirname(self, path: str) -> str:
         pass
 
@@ -25,10 +17,6 @@ class OsManager(ABC):
 
     @abstractmethod
     def is_file(self, path: str | Path) -> bool:
-        pass
-
-    @abstractmethod
-    def is_valid_zip(self, path: str | Path) -> bool:
         pass
 
     @abstractmethod
