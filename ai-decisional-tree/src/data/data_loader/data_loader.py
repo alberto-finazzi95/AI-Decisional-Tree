@@ -8,6 +8,11 @@ import src.data.data_loader.exceptions as ex
 
 class DataLoader(dcm.BaseData):
     TENTATIVES: int = 4
+    DATASET_TYPES: tuple[dcm.DatasetType] =(
+        dcm.DatasetType.TRAIN,
+        dcm.DatasetType.VALIDATION,
+        dcm.DatasetType.TEST,
+    )
 
     def __init__(
             self,
@@ -44,6 +49,20 @@ class DataLoader(dcm.BaseData):
         self._load_summary()
         # Checking if all files are present in the dataset folder
         self._check_files()
+        # Create a StudyCatalog for each dataset type
+        self._create_study_catalogs()
+
+    def _create_study_catalogs(self):
+        self._study_catalogs: dict[dcm.DatasetType, dcm.StudyCatalog] = {
+            dataset_type: dcm.StudyCatalog(summary_df)
+            for dataset_type, summary_df in self._SUMMARIES.items()
+        }
+
+    def get_study_catalog(self, dataset_type: dcm.DatasetType) -> dcm.StudyCatalog:
+        try:
+            return self._study_catalogs[dataset_type]
+        except KeyError:
+            raise ex.StudyCatalogNotFound(dataset_type)
 
     def _get_summary(self, dataset_type: dcm.DatasetType) -> pd.DataFrame:
         return self._summary_csv_raw[
@@ -53,19 +72,13 @@ class DataLoader(dcm.BaseData):
     def _load_summary(self):
         self._summary_csv_raw: pd.DataFrame = pd.read_csv(self._summary_csv_path)
         print(f"Summary CSV loaded from {self._summary_csv_raw.shape[0]} rows and {self._summary_csv_raw.shape[1]} columns.")
-        # Create separate DataFrames for training, validation, and test datasets
-        self._training_summary: pd.DataFrame = self._get_summary(dcm.DatasetType.TRAIN)
-        self._validation_summary: pd.DataFrame = self._get_summary(dcm.DatasetType.VALIDATION)
-        self._test_summary: pd.DataFrame = self._get_summary(dcm.DatasetType.TEST)
         # Store the summaries in a dictionary for easy access
-        self.SUMMARIES: dict[dcm.DatasetType, pd.DataFrame] = {
-            dcm.DatasetType.TRAIN: self._training_summary,
-            dcm.DatasetType.VALIDATION: self._validation_summary,
-            dcm.DatasetType.TEST: self._test_summary,
+        self._SUMMARIES: dict[dcm.DatasetType, pd.DataFrame] = {
+            data_type: self._get_summary(data_type) for data_type in self.DATASET_TYPES
         }
 
     def _set_file_path_in_summary(self, dataset_type: dcm.DatasetType, file_name: str, file_path: str):
-        summary_df: pd.DataFrame = self.SUMMARIES[dataset_type]
+        summary_df: pd.DataFrame = self._SUMMARIES[dataset_type]
         summary_df.loc[
             summary_df[dcm.Feature.NAME] == file_name, dcm.Feature.PATH
         ] = file_path
@@ -88,7 +101,7 @@ class DataLoader(dcm.BaseData):
         subfolders: list[str] = sorted(self._folder_manager.get_subfolders(file_path))
         num_subfolders: int = len(subfolders)
         subfolders_str: str = ", ".join(subfolders)
-        summary_df: pd.DataFrame = self.SUMMARIES[dataset_type]
+        summary_df: pd.DataFrame = self._SUMMARIES[dataset_type]
         # Adding the number of subfolders to the summary DataFrame
         summary_df.loc[
             summary_df[dcm.Feature.NAME] == dataset_name, dcm.Feature.NUM_SUB
@@ -99,7 +112,7 @@ class DataLoader(dcm.BaseData):
         ] = subfolders_str  # Store the list of subfolders in the DataFrame
 
     def _check_files(self):
-        for dataset_type, summary_df in self.SUMMARIES.items():
+        for dataset_type, summary_df in self._SUMMARIES.items():
             print(f"Checking files for {dataset_type.value} dataset with {summary_df.shape[0]} entries.")
             # Check and update the summary DataFrame with the full paths of the files, and collect missing files
             missing_files = self._check_dataset_type(dataset_type, summary_df)

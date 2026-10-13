@@ -9,3 +9,8 @@ class DatasetLoadError(RuntimeError):
 class MissingFilesError(FileNotFoundError):
     def __init__(self, dataset_type: dcm.DatasetType, missing_files: list):
         super().__init__(f"Missing files for {dataset_type.value} dataset: {missing_files}")
+
+
+class StudyCatalogNotFound(KeyError):
+    def __init__(self, dataset_type: dcm.DatasetType):
+        super().__init__(f"Study catalog not found for dataset type: {dataset_type.value}")

@@ -18,7 +18,25 @@ if __name__ == "__main__":
         config_parser=config_parser,
         os_manager=os_manager,
     )
-    # Load the raw data
-    data_loader.load_data()
-    # Process the loaded data to prepare it for analysis
-    data_loader.process_data()
+
+    data_plotter: src.DataPlotter = src.DataPlotter(
+        folder_manager=folder_manager,
+        config_parser=config_parser,
+        os_manager=os_manager
+    )
+
+    data_analyzer: src.DataAnalyzer = src.DataAnalyzer(
+        folder_manager=folder_manager,
+        config_parser=config_parser,
+        os_manager=os_manager
+    )
+
+    # Data Manager to handle data operations
+    data_manager: src.DataManager = src.DataManager(
+        data_loader=data_loader,
+        data_plotter=data_plotter,
+        data_analyzer=data_analyzer
+    )
+
+    # Example usage: Plot TACs for a specific patient
+    data_manager.plot_all_tacs()
