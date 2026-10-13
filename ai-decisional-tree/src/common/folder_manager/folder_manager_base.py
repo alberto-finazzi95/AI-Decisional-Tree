@@ -5,6 +5,7 @@ import src.common.folder_manager.exceptions as ex
 import src.common.folder_manager.data_structures as ds
 from src.common.os_manager import OsManager, OsWrapper
 
+
 class FolderManagerBase(ABC):
     def __init__(self, base_path: str, os_manager: OsManager | None = None):
         self.base_path: Path = Path(base_path)
@@ -57,3 +58,8 @@ class FolderManagerBase(ABC):
                 else:
                     self._delete_folder(item)
             self._os_manager.rmdir(folder_path)
+
+    def get_subfolders(self, folder: str | Path) -> list[str]:
+        if not self._os_manager.exists(folder) or not self._os_manager.is_dir(folder):
+            raise ex.NoFolderException(folder)
+        return [item.name for item in self._os_manager.iterdir(folder) if self._os_manager.is_dir(item)]

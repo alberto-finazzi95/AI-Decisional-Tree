@@ -18,5 +18,7 @@ if __name__ == "__main__":
         config_parser=config_parser,
         os_manager=os_manager,
     )
+    # Load the raw data
     data_loader.load_data()
+    # Process the loaded data to prepare it for analysis
     data_loader.process_data()

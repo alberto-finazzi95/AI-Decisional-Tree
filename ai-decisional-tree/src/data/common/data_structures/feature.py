@@ -14,3 +14,7 @@ class Feature(StrEnum):
     TIME = "time"
     LETHALITY = "lethality"
     PART = "part"
+    # Feature customized
+    PATH = "path"
+    NUM_SUB = "num subfolders"
+    SUBFOLDERS = "subfolders"
