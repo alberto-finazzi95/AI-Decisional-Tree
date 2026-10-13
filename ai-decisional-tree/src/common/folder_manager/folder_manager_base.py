@@ -39,6 +39,12 @@ class FolderManagerBase(ABC):
             return str(folder_path)
         return folder_path
 
+    def compose_folders(self, *folder_names: str | ds.FolderName, str_format: bool = True) -> str | Path:
+        composed_path: Path = self.base_path.joinpath(*folder_names)
+        if str_format:
+            return str(composed_path)
+        return composed_path
+
     def delete_folder(self, folder_name: ds.FolderName) -> None:
         folder_path: Path = self.base_path / folder_name
         self._delete_folder(folder_path)

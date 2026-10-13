@@ -19,3 +19,4 @@ if __name__ == "__main__":
         os_manager=os_manager,
     )
     data_loader.load_data()
+    data_loader.process_data()
