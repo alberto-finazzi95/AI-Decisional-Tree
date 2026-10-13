@@ -1,13 +1,90 @@
-# AI-Decisional-Tree
+# AI Decisional Tree
 
-Dataset loading uses `kagglehub` and writes extracted files to the configured
-`Dataset.extract_path`, resolved relative to the application directory.
-Completed downloads are reused through kagglehub's completion markers;
-metadata requests may still require network access. `DataLoader.load_data()`
-returns the resolved dataset directory. The legacy `download_path` and
-`archive_name` settings are no longer used by the loader.
+Python project for loading and checking the **CPAISD (Core-Penumbra Acute
+Ischemic Stroke Dataset)**. The current code downloads the dataset, reads its
+study summary, separates studies by split, and checks that the corresponding
+study folders are present. It is an early-stage data-loading scaffold: decision
+tree training, CT/mask loading, analysis, and plotting are not implemented yet.
 
-If HTTPS certificate verification fails, the download is retried once after
-`truststore` enables the system certificate store. TLS verification remains
-enabled. This changes SSL configuration for the application process; any
-retry failure is propagated to the caller.
+## Dataset
+
+CPAISD contains **112 anonymized non-contrast CT studies** of hyperacute
+ischemic stroke. The scans include expert annotations of the ischemic core and
+penumbra. Kaggle reports the following study and slice counts:
+
+| Split | Studies | Slices |
+| --- | ---: | ---: |
+| Training (`train`) | 92 | 8,376 |
+| Validation (`val`) | 10 | 980 |
+| Test (`test`) | 10 | 809 |
+
+The dataset provides raw anonymized DICOM slices, NumPy image and mask files,
+and metadata. Study-level metadata includes scanner manufacturer and model,
+age, sex, NIHSS, time, and lethality; DICOM demographic/scanner fields are
+retained for research. The Kaggle download is approximately **8.6 GB**.
+
+- [Dataset on Kaggle](https://www.kaggle.com/datasets/orvile/cpaisd-acute-ischemic-stroke-dataset/data)
+- [Dataset DOI](https://doi.org/10.5281/zenodo.10892316)
+- Dataset license: [MIT](https://opensource.org/licenses/MIT)
+
+## Requirements and setup
+
+Use Python 3.11 or later. From the repository root, install the pinned
+dependencies:
+
+```powershell
+python -m pip install -r requirements.txt
+```
+
+The project uses `kagglehub` to download the dataset. Configure Kaggle access
+using the [KaggleHub authentication instructions](https://github.com/Kaggle/kagglehub#authenticate)
+before the first download; the download may require network access and Kaggle
+credentials. Do not commit credentials to the repository.
+
+## Run
+
+Run the application entry point from the repository root:
+
+```powershell
+python .\ai-decisional-tree\__main__.py
+```
+
+The entry point initializes the loader, plotter, and analyzer. The data manager
+validates the summary and split folders; its loader uses KaggleHub to download
+the configured dataset when needed. There is currently an initialization
+limitation: the summary path is resolved before the loader can start a download,
+so a fresh checkout must have the dataset in the expected layout before this
+entry point can run. There is no model-training or prediction command.
+
+## Configuration and expected files
+
+The dataset settings are in
+[`ai-decisional-tree/config/config.ini`](ai-decisional-tree/config/config.ini).
+The default Kaggle dataset identifier is
+`orvile/cpaisd-acute-ischemic-stroke-dataset`, and the configured output
+directory is `file/`, relative to the application directory.
+
+The loader expects to find `summary.csv` and the split folders under
+`<output_path>/dataset/`, with study directories named as listed in the
+summary. The summary must include `name` and `part` columns; split values are
+`train`, `val`, and `test`. The loader partitions the summary by `part`, checks
+each listed study folder, and records its path and immediate subfolders. It
+does not currently read the individual DICOM, `.npz`, or per-study metadata
+files.
+
+## Citation
+
+If you use CPAISD, cite the dataset:
+
+> Umerenkov, D., Kudin, S., Peksheva, M., & Pavlov, D. (2024). *CPAISD:
+> Core-Penumbra Acute Ischemic Stroke Dataset* [Data set]. Zenodo.
+> https://doi.org/10.5281/zenodo.10892316
+
+The dataset's license applies to the dataset; this repository is separately
+distributed under the MIT License (see [`LICENSE`](LICENSE)).
+
+## Disclaimer
+
+This project and dataset are intended for research and educational use. They
+are not a clinical diagnostic tool and must not be used as a substitute for
+professional medical judgment.
