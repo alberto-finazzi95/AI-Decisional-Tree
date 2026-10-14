@@ -57,6 +57,15 @@ class BaseData(ABC):
         """
         return self._folder_manager.folder_exists(path)
 
+    def file_exists(self, path: str) -> bool:
+        """
+        Checks if a given path exists.
+
+        Args:
+            path (str): The path to check.
+        """
+        return self._folder_manager.file_exists(path)
+
     def create_folder(self, folder_path: str) -> None:
         """
         Creates a folder at the specified path.

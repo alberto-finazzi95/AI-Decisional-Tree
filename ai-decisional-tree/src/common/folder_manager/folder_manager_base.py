@@ -1,5 +1,6 @@
 from abc import ABC
 from pathlib import Path
+from typing import overload
 
 import src.common.folder_manager.exceptions as ex
 import src.common.folder_manager.data_structures as ds
@@ -17,9 +18,28 @@ class FolderManagerBase(ABC):
             return str(file_path)
         return file_path
 
-    def file_exists(self, folder_name: str | ds.FolderName, file_name: str | ds.FileName) -> bool:
-        file_path: str | Path = self.get_file_path(folder_name, file_name, str_format=False)
-        return self._os_manager.exists(file_path) and self._os_manager.is_file(file_path)
+    @overload
+    def file_exists(
+        self, folder_name: str | ds.FolderName, file_name: str | ds.FileName
+    ) -> bool: ...
+
+    # Firma 2: Passi solo il Path completo
+    @overload
+    def file_exists(self, file_path: Path) -> bool: ...
+
+    def file_exists(
+        self, folder_or_path: any, file_name: any = None
+    ) -> bool:
+        if file_name is None:
+            file_path = folder_or_path
+        else:
+            file_path = self.get_file_path(
+                folder_or_path, file_name, str_format=False
+            )
+
+        return self._os_manager.exists(file_path) and self._os_manager.is_file(
+            file_path
+        )
 
     def folder_exists(self, folder_name: str | ds.FolderName) -> bool:
         folder_path: str | Path = self.get_folder_path(folder_name, str_format=False)

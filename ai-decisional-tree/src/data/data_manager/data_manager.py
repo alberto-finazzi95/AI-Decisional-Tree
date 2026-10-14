@@ -60,8 +60,13 @@ class DataManager:
         Plots the TACs for all patients in the dataset.
         """
         for single_study in self.all_studies:
+            print(f"Plotting TACs for patient: {single_study.study_id} with {single_study.num_subfolders} frames.")
             for i_frame in range(single_study.num_subfolders):
-                self.plot_tac(single_study.study_id, i_frame)
+                # Plot the TAC for each patient and frame
+                study_id: str = single_study.study_id
+                self.plot_tac(study_id, i_frame)
+                # Store the plotted TAC as a PNG file for further analysis
+                self.store_tac_png(study_id, i_frame)
 
     def plot_tac(self, patient_id: str, num_img: int):
         """
@@ -78,6 +83,8 @@ class DataManager:
             raise cm.NoFolderFound(patient_img_path)
         # Plot the TAC for the specified patient image path
         self._data_plotter.plot_tac(patient_img_path, patient_id, num_img)
+
+    def store_tac_png(self, patient_id: str, num_img: int):
         # Store the plotted TAC for further analysis
         patient_path: str = self.get_path(patient_id)
         self._data_plotter.save_tac(patient_path, num_img)

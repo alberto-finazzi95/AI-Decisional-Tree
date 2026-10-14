@@ -7,6 +7,7 @@ import src.data.data_loader.exceptions as ex
 
 
 class DataLoader(dcm.BaseData):
+    SUB_FOLDER_PREFIX: str = "00"
     TENTATIVES: int = 4
     DATASET_TYPES: tuple[dcm.DatasetType] =(
         dcm.DatasetType.TRAIN,
@@ -96,7 +97,12 @@ class DataLoader(dcm.BaseData):
         )
 
     def _adding_subfolders_to_summary(self, dataset_type: dcm.DatasetType, dataset_name: str, file_path: str):
-        subfolders: list[str] = sorted(self._folder_manager.get_subfolders(file_path))
+        subfolders: list[str] = sorted(
+            [
+                sub_folder for sub_folder in self._folder_manager.get_subfolders(file_path)
+                if sub_folder.startswith(self.SUB_FOLDER_PREFIX)  # Filter subfolders that start with the specified prefix
+            ]
+        )
         num_subfolders: int = len(subfolders)
         subfolders_str: str = ", ".join(subfolders)
         summary_df: pd.DataFrame = self._SUMMARIES[dataset_type]

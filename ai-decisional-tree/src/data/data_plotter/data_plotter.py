@@ -152,7 +152,8 @@ class DataPlotter(dcm.BaseData):
             image_path,
             f"tac_{num_img}.png"
         )
-        if self.path_exists(save_path):
+        if self.file_exists(save_path):
+            print(f"TAC already exists at {save_path}. Skipping save.")
             return
         if not self.path_exists(image_path):
             print("Image path does not exist. Creating...")
