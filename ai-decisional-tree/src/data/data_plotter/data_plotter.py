@@ -1,6 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
+import imageio as iio
+import imageio.v3 as iio3
 
 import src.common as cm
 import src.config_parser as cp
@@ -17,14 +19,18 @@ class DataPlotter(dcm.BaseData):
             self,
             folder_manager: cm.FolderManager,
             config_parser: cp.ConfigParser,
-            os_manager: cm.OsManager | None = None
+            os_manager: cm.OsManager | None = None,
     ):
         super().__init__(folder_manager, config_parser, os_manager)
+        self._frame_for_video: list = []
         self._create_figure()
 
     @property
     def fig(self) -> plt.Figure:
         return self._fig
+
+    def clean_frame_for_video(self):
+        self._frame_for_video.clear()
 
     def _create_figure(self) -> None:
         self._fig, self._axes = plt.subplots(1, 2, figsize=(12, 6))
@@ -124,9 +130,7 @@ class DataPlotter(dcm.BaseData):
             fraction=0.046,
             pad=0.04,
         )
-        cbar.ax.set_yticklabels(
-            self.TICK_LABELS
-        )
+        cbar.ax.set_yticklabels(self.TICK_LABELS)
 
     @staticmethod
     def load_img(img_path: str) -> np.ndarray:
@@ -134,7 +138,6 @@ class DataPlotter(dcm.BaseData):
             # Extract the image matrix from the loaded npz file
             img_key: str = next(iter(img_data.keys()))
             return img_data[img_key]
-
 
     def save_tac(
             self,
@@ -152,11 +155,43 @@ class DataPlotter(dcm.BaseData):
             image_path,
             f"tac_{num_img}.png"
         )
-        if self.file_exists(save_path):
-            print(f"TAC already exists at {save_path}. Skipping save.")
-            return
+        # Store the path of the saved TAC for video creation
+        self._frame_for_video.append(save_path)
+        # Ensure the image path exists; if not, create it
         if not self.path_exists(image_path):
             print("Image path does not exist. Creating...")
             self.create_folder(image_path)
+        # Save the figure if it doesn't already exist
+        self.save_figure_tac(save_path)
+
+    def save_figure_tac(self, save_path: str):
+        if self.file_exists(save_path):
+            print(f"TAC already exists at {save_path}. Skipping save.")
+            return
         self._fig.savefig(save_path)
         print(f"TAC saved to {save_path}")
+
+    def save_video(self, patient_id: str, patient_path: str):
+        video_path: str = self._get_video_path(patient_id, patient_path)
+        if self.file_exists(video_path):
+            print(f"TAC video already exists at {video_path}. Skipping save.")
+            # Reset the frames
+            self.clean_frame_for_video()
+            return
+        with self.get_video_writer(video_path) as writer:
+            for png in self._frame_for_video:
+                writer.append_data(iio3.imread(png))
+        print(f"Video created at {video_path}")
+        # Reset the frames
+        self.clean_frame_for_video()
+
+    def _get_video_path(self, patient_id: str, folder_path: str) -> str:
+        file_name: str = f"video_{patient_id}.mp4"
+        return self.compose_path(folder_path, cm.FolderName.IMAGE, file_name)
+
+    @staticmethod
+    def get_video_writer(video_path: str):
+        video_fps: int = ds.VideoInfo.fps
+        video_mode: str = ds.VideoInfo.mode
+        video_format: str = ds.VideoInfo.format
+        return iio.get_writer(video_path, fps=video_fps, mode=video_mode, format=video_format)

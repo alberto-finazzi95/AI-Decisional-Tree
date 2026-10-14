@@ -60,13 +60,15 @@ class DataManager:
         Plots the TACs for all patients in the dataset.
         """
         for single_study in self.all_studies:
-            print(f"Plotting TACs for patient: {single_study.study_id} with {single_study.num_subfolders} frames.")
+            study_id: str = single_study.study_id
+            print(f"Plotting TACs for patient: {study_id} with {single_study.num_subfolders} frames.")
             for i_frame in range(single_study.num_subfolders):
                 # Plot the TAC for each patient and frame
-                study_id: str = single_study.study_id
                 self.plot_tac(study_id, i_frame)
                 # Store the plotted TAC as a PNG file for further analysis
                 self.store_tac_png(study_id, i_frame)
+            # Store the plotted TACs for the patient as a video
+            self.store_tac_video(single_study.study_id)
 
     def plot_tac(self, patient_id: str, num_img: int):
         """
@@ -88,6 +90,10 @@ class DataManager:
         # Store the plotted TAC for further analysis
         patient_path: str = self.get_path(patient_id)
         self._data_plotter.save_tac(patient_path, num_img)
+
+    def store_tac_video(self, patient_id: str):
+        patient_path: str = self.get_path(patient_id)
+        self._data_plotter.save_video(patient_id, patient_path)
 
     def path_exists(self, path: str) -> bool:
         """
