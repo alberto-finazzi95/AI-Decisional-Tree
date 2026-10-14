@@ -33,6 +33,7 @@ if __name__ == "__main__":
 
     # Data Manager to handle data operations
     data_manager: src.DataManager = src.DataManager(
+        folder_manager=folder_manager,
         data_loader=data_loader,
         data_plotter=data_plotter,
         data_analyzer=data_analyzer

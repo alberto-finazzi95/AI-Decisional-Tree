@@ -84,17 +84,15 @@ class DataLoader(dcm.BaseData):
         ] = file_path
 
     def _get_data_path(self, data_name: str, dataset_type_folder: dcm.DatasetType) -> str:
-        return self._folder_manager.compose_folders(
+        return self.compose_path(
                     dataset_type_folder,
                     data_name,
-                    str_format=True
                 )
 
     def _get_dataset_type_folder(self, dataset_type: dcm.DatasetType) -> str:
-        return self._folder_manager.compose_folders(
+        return self.compose_path(
             self._dataset_folder,
-            dataset_type,
-            str_format=True
+            dataset_type
         )
 
     def _adding_subfolders_to_summary(self, dataset_type: dcm.DatasetType, dataset_name: str, file_path: str):

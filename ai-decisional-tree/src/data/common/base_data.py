@@ -36,7 +36,7 @@ class BaseData(ABC):
         )
 
     def _set_files(self):
-        self._summary_csv_path: str = self._folder_manager.get_file_path_if_exist(
+        self._summary_csv_path: str = self._folder_manager.get_file_path(
             file_name=cm.FileName.SUMMARY_CSV,
             folder_name=self._dataset_folder,
             str_format=True
@@ -44,3 +44,24 @@ class BaseData(ABC):
 
     def folder_exists(self, folder_path: str) -> bool:
         return self._os_manager.exists(folder_path) and self._os_manager.is_dir(folder_path)
+
+    def compose_path(self, *args: str) -> str:
+        return self._folder_manager.compose_folders(*args, str_format=True)
+
+    def path_exists(self, path: str) -> bool:
+        """
+        Checks if a given path exists.
+
+        Args:
+            path (str): The path to check.
+        """
+        return self._folder_manager.folder_exists(path)
+
+    def create_folder(self, folder_path: str) -> None:
+        """
+        Creates a folder at the specified path.
+
+        Args:
+            folder_path (str): The path where the folder should be created.
+        """
+        self._folder_manager.create_folder(folder_path)

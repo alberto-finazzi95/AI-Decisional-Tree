@@ -1,4 +1,5 @@
-import src.data.common as cm
+import src.common as cm
+import src.data.common as dcm
 import src.data.data_loader as dl
 import src.data.data_plotter as dp
 import src.data.data_analyzer as da
@@ -16,6 +17,7 @@ class DataManager:
 
     def __init__(
             self,
+            folder_manager: cm.FolderManager,
             data_loader: dl.DataLoader,
             data_plotter: dp.DataPlotter,
             data_analyzer: da.DataAnalyzer
@@ -24,10 +26,14 @@ class DataManager:
         Initializes the DataManager with instances of DataLoader, DataPlotter, and DataAnalyzer.
 
         Args:
+            folder_manager (FolderManager): An instance of the FolderManager class.
             data_loader (DataLoader): An instance of the DataLoader class.
             data_plotter (DataPlotter): An instance of the DataPlotter class.
             data_analyzer (DataAnalyzer): An instance of the DataAnalyzer class.
         """
+        # Initialize the base class with the provided folder manager
+        self._folder_manager: cm.FolderManager = folder_manager
+
         # Initialize the DataLoader, DataPlotter, and DataAnalyzer instances
         self._data_loader: dl.DataLoader = data_loader
         self._data_plotter: dp.DataPlotter = data_plotter
@@ -39,14 +45,14 @@ class DataManager:
         self._data_loader.process_data()
 
         # Set the initial state of the DataManager to TRAIN
-        self._state: cm.DatasetType = cm.DatasetType.TRAIN
+        self._state: dcm.DatasetType = dcm.DatasetType.TRAIN
 
     @property
-    def state(self) -> cm.DatasetType:
+    def state(self) -> dcm.DatasetType:
         return self._state
 
     @state.setter
-    def state(self, value: cm.DatasetType):
+    def state(self, value: dcm.DatasetType):
         self._state = value
 
     def plot_all_tacs(self):
@@ -54,25 +60,47 @@ class DataManager:
         Plots the TACs for all patients in the dataset.
         """
         for single_study in self.all_studies:
-            self.plot_tac(single_study.study_id)
+            for i_frame in range(single_study.num_subfolders):
+                self.plot_tac(single_study.study_id, i_frame)
 
-    def plot_tac(self, patient_id: str):
+    def plot_tac(self, patient_id: str, num_img: int):
         """
         Plots the TACs for a given patient ID.
 
         Args:
             patient_id (str): The ID of the patient whose TACs are to be plotted.
+            num_img (int): The index of the image to plot.
         """
-        patient_img_path: str = self.get_subfolders(patient_id)[0]
-        self._data_plotter.plot_tac(patient_img_path)
+        # Get the patient image path for the specified patient ID and image index
+        patient_img_path: str = self.get_subfolders(patient_id)[num_img]
+        # Check if the patient image path exists before plotting
+        if not self.path_exists(patient_img_path):
+            raise cm.NoFolderFound(patient_img_path)
+        # Plot the TAC for the specified patient image path
+        self._data_plotter.plot_tac(patient_img_path, patient_id, num_img)
+        # Store the plotted TAC for further analysis
+        patient_path: str = self.get_path(patient_id)
+        self._data_plotter.save_tac(patient_path, num_img)
+
+    def path_exists(self, path: str) -> bool:
+        """
+        Checks if a given path exists.
+
+        Args:
+            path (str): The path to check.
+        """
+        return self._folder_manager.folder_exists(path)
 
     @property
-    def _study_catalog(self) -> cm.StudyCatalog:
+    def _study_catalog(self) -> dcm.StudyCatalog:
         return self._data_loader.get_study_catalog(self._state)
 
-    def get_subfolders(self, dataset_name: str) -> tuple[str, ...]:
-        return self._study_catalog.get_subfolders(dataset_name)
+    def get_subfolders(self, study_id: str) -> tuple[str, ...]:
+        return self._study_catalog.get_abs_subfolders(study_id)
+
+    def get_path(self, study_id: str) -> str:
+        return self._study_catalog.get_path(study_id)
 
     @property
-    def all_studies(self) -> tuple[cm.Study, ...]:
+    def all_studies(self) -> tuple[dcm.Study, ...]:
         return self._study_catalog.studies

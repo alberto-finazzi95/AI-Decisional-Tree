@@ -33,10 +33,17 @@ class StudyCatalog:
             folder.strip() for folder in subfolders_str.split(",")) \
             if subfolders_str else ()
 
-
     def get_subfolders(self, study_id: str) -> tuple[str, ...]:
         study: ds.Study = self.get_study(study_id)
         return study.subfolders
+
+    def get_abs_subfolders(self, study_id: str) -> tuple[str, ...]:
+        study: ds.Study = self.get_study(study_id)
+        return study.abs_subfolders
+
+    def get_path(self, study_id: str) -> str:
+        study: ds.Study = self.get_study(study_id)
+        return study.path
 
     def get_study(self, study_id: str) -> ds.Study:
         """Get one study by its unique identifier."""

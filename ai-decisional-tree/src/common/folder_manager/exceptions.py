@@ -17,7 +17,7 @@ class NoFileException(FileNotFoundError):
         super().__init__(message)
 
 
-class NoFolderException(FileNotFoundError):
+class NoFolderFound(FileNotFoundError):
     """
     Exception raised when a folder is not found.
 

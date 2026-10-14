@@ -61,5 +61,5 @@ class FolderManagerBase(ABC):
 
     def get_subfolders(self, folder: str | Path) -> list[str]:
         if not self._os_manager.exists(folder) or not self._os_manager.is_dir(folder):
-            raise ex.NoFolderException(folder)
+            raise ex.NoFolderFound(folder)
         return [item.name for item in self._os_manager.iterdir(folder) if self._os_manager.is_dir(item)]

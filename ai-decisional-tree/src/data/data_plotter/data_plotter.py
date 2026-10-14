@@ -1,12 +1,18 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors as clr
 
 import src.common as cm
 import src.config_parser as cp
 import src.data.common as dcm
+import src.data.data_plotter.data_structures as ds
 
 
 class DataPlotter(dcm.BaseData):
+    TICK_LABELS: list[str] = ['0: Healthy / Background', '1: Core Ischemic', '2: Penumbra']
+    IMG_TITLE: str = "TC Unenhanced Brain"
+    MASK_TITLE: str = "Clinical Segmentation Mask (Ground Truth)"
+
     def __init__(
             self,
             folder_manager: cm.FolderManager,
@@ -14,7 +20,142 @@ class DataPlotter(dcm.BaseData):
             os_manager: cm.OsManager | None = None
     ):
         super().__init__(folder_manager, config_parser, os_manager)
+        self._create_figure()
 
-    def plot_tac(self, patient_img_path: str):
-        # TODO: Implement the logic to read the patient image data and plot the TAC (Time-Activity Curve)
-        pass
+    @property
+    def fig(self) -> plt.Figure:
+        return self._fig
+
+    def _create_figure(self) -> None:
+        self._fig, self._axes = plt.subplots(1, 2, figsize=(12, 6))
+        self._clear_axes()
+
+    def load_matrices(self, patient_img_path: str) -> tuple[np.ndarray, np.ndarray]:
+        # Compose the paths for the image and mask files
+        img_path: str = self.compose_path(patient_img_path, ds.ImageFileType.IMG)
+        mask_path: str = self.compose_path(patient_img_path, ds.ImageFileType.MASK)
+
+        # Load the image and mask data
+        img_matrix: np.ndarray = self.load_img(img_path)
+        mask_matrix: np.ndarray = self.load_img(mask_path)
+
+        return img_matrix, mask_matrix
+
+    def plot_tac(self, patient_img_path: str, patient_id: str, num_img: int):
+        # Load the image and mask data
+        img_matrix, mask_matrix = self.load_matrices(patient_img_path)
+
+        # Closing a pyplot window unregisters its figure; create a new one if needed.
+        self._close_figure_if_needed()
+
+        # Set the figure title and create subplots for the image and mask
+        fig_title: str = self.set_fig_title(patient_id, num_img)
+        self._fig.suptitle(fig_title)
+
+        # Plot the image
+        self.plot_img(
+            0,
+            img_matrix,
+            self.IMG_TITLE,
+        )
+        # Plot the mask
+        self.plot_mask(
+            1,
+            mask_matrix,
+            self.MASK_TITLE
+        )
+
+        self._fig.tight_layout()
+        self._clear_axes()
+
+    def _clear_axes(self):
+        for ax in self._axes:
+            ax.set_xticks([])
+            ax.set_yticks([])
+            ax.set_axis_off()
+
+    def _close_figure_if_needed(self):
+        if not plt.fignum_exists(self._fig.number):
+            self._create_figure()
+            return
+
+        self._fig.clear()
+        self._axes = self._fig.subplots(1, 2)
+        self._clear_axes()
+
+    @staticmethod
+    def set_fig_title(patient_id: str, num_img: int) -> str:
+        return f"ID: {patient_id}\nFrame: {num_img}"
+
+    def plot_img(
+            self,
+            ax_index: int,
+            img_matrix: np.ndarray,
+            title: str,
+    ):
+        # Graphic 1: Native Brain CT (in grayscale, optimized for the brain)
+        # We use vmin and vmax for an initial visual windowing (e.g., between 0 and 80 Hounsfield Units)
+        ax: plt.Axes = self._axes[ax_index]
+        image: plt.AxesImage = ax.imshow(img_matrix, cmap='gray', vmin=0, vmax=80)
+        ax.set_title(title)
+        ax.figure.colorbar(image, ax=ax, label="Density (HU)", fraction=0.046, pad=0.04)
+
+    def plot_mask(
+            self,
+            ax_index: int,
+            mask_matrix: np.ndarray,
+            title: str
+    ):
+        ax: plt.Axes = self._axes[ax_index]
+        # Graphic 2: Clinical Segmentation Mask (Ground Truth)
+        # We define a discrete colormap: 0=Black (Healthy), 1=Red (Core), 2=Yellow (Penumbra)
+        colors: list[str] = ['black', 'red', 'yellow']
+        cmap_mask: clr.ListedColormap = clr.ListedColormap(colors)
+
+        # Setting vmin=0 and vmax=2 to map exactly the 3 classes
+        im: plt.AxesImage = ax.imshow(mask_matrix, cmap=cmap_mask, vmin=0, vmax=2)
+        ax.set_title(title)
+
+        # Configuring the colorbar for the mask colormap
+        cbar: plt.Colorbar = self._fig.colorbar(
+            im,
+            ax=ax,
+            ticks=[0, 1, 2],
+            fraction=0.046,
+            pad=0.04,
+        )
+        cbar.ax.set_yticklabels(
+            self.TICK_LABELS
+        )
+
+    @staticmethod
+    def load_img(img_path: str) -> np.ndarray:
+        with np.load(img_path) as img_data:
+            # Extract the image matrix from the loaded npz file
+            img_key: str = next(iter(img_data.keys()))
+            return img_data[img_key]
+
+
+    def save_tac(
+            self,
+            patient_path: str,
+            num_img: int):
+        """
+        Saves the current figure (TAC) to the specified path.
+
+        Args:
+            patient_path (str): The path of the patient.
+            num_img (int): The index of the image.
+        """
+        image_path: str = self.compose_path(patient_path, cm.FolderName.IMAGE)
+        save_path: str = self.compose_path(
+            image_path,
+            f"tac_{num_img}.png"
+        )
+        if self.path_exists(save_path):
+            return
+        if not self.path_exists(image_path):
+            print("Image path does not exist. Creating...")
+            self.create_folder(image_path)
+        self._fig.savefig(save_path)
+        print(f"TAC saved to {save_path}")
