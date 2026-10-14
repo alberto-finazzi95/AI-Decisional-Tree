@@ -1,8 +1,10 @@
 import src.common as cm
+import src.config_parser as cp
 import src.data.common as dcm
 import src.data.data_loader as dl
 import src.data.data_plotter as dp
 import src.data.data_analyzer as da
+import src.data.data_toolkit as dt
 
 
 class DataManager:
@@ -18,26 +20,27 @@ class DataManager:
     def __init__(
             self,
             folder_manager: cm.FolderManager,
-            data_loader: dl.DataLoader,
-            data_plotter: dp.DataPlotter,
-            data_analyzer: da.DataAnalyzer
+            data_toolkit: dt.DataToolkit,
     ):
         """
         Initializes the DataManager with instances of DataLoader, DataPlotter, and DataAnalyzer.
 
         Args:
             folder_manager (FolderManager): An instance of the FolderManager class.
-            data_loader (DataLoader): An instance of the DataLoader class.
-            data_plotter (DataPlotter): An instance of the DataPlotter class.
-            data_analyzer (DataAnalyzer): An instance of the DataAnalyzer class.
+            data_toolkit (DataToolkit): An instance of the DataToolkit class.
         """
-        # Initialize the base class with the provided folder manager
-        self._folder_manager: cm.FolderManager = folder_manager
+        # Initialize the base class with the provided folder manager and config parser
+        self._folder_manager: cm.FolderManager = data_toolkit.folder_manager
+        self._config_parser:  cp.ConfigParser = data_toolkit.config_parser
+
+        # Get initial flags
+        self._create_img: bool = self._config_parser.save_img
+        self._create_video: bool = self._config_parser.save_video
 
         # Initialize the DataLoader, DataPlotter, and DataAnalyzer instances
-        self._data_loader: dl.DataLoader = data_loader
-        self._data_plotter: dp.DataPlotter = data_plotter
-        self._data_analyzer: da.DataAnalyzer = data_analyzer
+        self._data_loader: dl.DataLoader = data_toolkit.data_loader
+        self._data_plotter: dp.DataPlotter = data_toolkit.data_plotter
+        self._data_analyzer: da.DataAnalyzer = data_toolkit.data_analyzer
 
         # Load the data when the DataManager is initialized
         self._data_loader.load_data()
@@ -59,6 +62,9 @@ class DataManager:
         """
         Plots the TACs for all patients in the dataset.
         """
+        if (not self._create_img) and (not self._create_video):
+            print("Don't create any images or videos as configuration settings.")
+            return
         for single_study in self.all_studies:
             study_id: str = single_study.study_id
             print(f"Plotting TACs for patient: {study_id} with {single_study.num_subfolders} frames.")
@@ -87,11 +93,17 @@ class DataManager:
         self._data_plotter.plot_tac(patient_img_path, patient_id, num_img)
 
     def store_tac_png(self, patient_id: str, num_img: int):
+        if not self._create_img:
+            print("Don't create any images as configuration settings.")
+            return
         # Store the plotted TAC for further analysis
         patient_path: str = self.get_path(patient_id)
         self._data_plotter.save_tac(patient_path, num_img)
 
     def store_tac_video(self, patient_id: str):
+        if not self._create_video:
+            print("Don't create any videos as configuration settings.")
+            return
         patient_path: str = self.get_path(patient_id)
         self._data_plotter.save_video(patient_id, patient_path)
 

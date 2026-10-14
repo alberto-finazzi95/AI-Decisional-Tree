@@ -14,3 +14,11 @@ class ConfigParser(cpb.ConfigParserBase):
     @property
     def dataset_output_path(self) -> str:
         return self.get(ds.Section.DATASET, ds.Option.OUTPUT_PATH)
+
+    @property
+    def save_img(self) -> bool:
+        return self.get_boolean(ds.Section.STORAGE, ds.Option.SAVE_IMG)
+
+    @property
+    def save_video(self) -> bool:
+        return self.get_boolean(ds.Section.STORAGE, ds.Option.SAVE_VIDEO)
