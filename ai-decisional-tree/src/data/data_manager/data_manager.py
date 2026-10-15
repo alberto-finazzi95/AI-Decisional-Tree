@@ -63,7 +63,7 @@ class DataManager:
         Plots the TACs for all patients in the dataset.
         """
         if (not self._create_img) and (not self._create_video):
-            print("Don't create any images or videos as configuration settings.")
+            print(f"[{self._state}] Don't create any images or videos as configuration settings.")
             return
         for single_study in self.all_studies:
             study_id: str = single_study.study_id

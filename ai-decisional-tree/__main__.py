@@ -4,6 +4,7 @@ import sys
 import __version__ as v
 import src
 
+
 if __name__ == "__main__":
     print(f"Running SW version: {v.VERSION}")
     current_folder: str = os.path.dirname(os.path.abspath(sys.argv[0]))
@@ -24,5 +25,9 @@ if __name__ == "__main__":
         data_toolkit=data_toolkit,
     )
 
-    # Example usage: Plot TACs for a specific patient
-    data_manager.plot_all_tacs()
+    # For all patients
+    for state in src.DatasetType:
+        # For train, val and test set
+        data_manager.state = state
+        # Plot all raw TACs as images and videos
+        data_manager.plot_all_tacs()
