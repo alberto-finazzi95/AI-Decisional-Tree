@@ -5,3 +5,4 @@ class FolderName(StrEnum):
     CONFIG = "config"
     DATASET = "dataset"
     IMAGE = "image"
+    VIDEO = "video"

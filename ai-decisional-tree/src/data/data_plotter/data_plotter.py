@@ -7,6 +7,7 @@ import imageio.v3 as iio3
 import src.common as cm
 import src.config_parser as cp
 import src.data.common as dcm
+import src.data.data_plotter.exceptions as ex
 import src.data.data_plotter.data_structures as ds
 
 
@@ -158,9 +159,7 @@ class DataPlotter(dcm.BaseData):
         # Store the path of the saved TAC for video creation
         self._frame_for_video.append(save_path)
         # Ensure the image path exists; if not, create it
-        if not self.path_exists(image_path):
-            print("Image path does not exist. Creating...")
-            self.create_folder(image_path)
+        self._create_not_existing_folder(image_path)
         # Save the figure if it doesn't already exist
         self.save_figure_tac(save_path)
 
@@ -171,13 +170,24 @@ class DataPlotter(dcm.BaseData):
         self._fig.savefig(save_path)
         print(f"TAC saved to {save_path}")
 
-    def save_video(self, patient_id: str, patient_path: str):
-        video_path: str = self._get_video_path(patient_id, patient_path)
+    def _create_not_existing_folder(self, folder_path: str):
+        if not self.path_exists(folder_path):
+            print(f"Path '{folder_path}' does not exist. Creating...")
+            self.create_folder(folder_path)
+
+    def save_video(self, patient_id: str, num_frame: int, model_phase: dcm.DatasetType):
+        # Video folder creation
+        video_folder: str = self._get_video_folder(model_phase)
+        self._create_not_existing_folder(video_folder)
+        # Single video path
+        video_path: str = self._get_video_path(patient_id, video_folder)
         if self.file_exists(video_path):
             print(f"TAC video already exists at {video_path}. Skipping save.")
             # Reset the frames
             self.clean_frame_for_video()
             return
+        # Check if the list self._frame_for_video has all the png files
+        self._check_num_frame(patient_id, num_frame)
         with self.get_video_writer(video_path) as writer:
             for png in self._frame_for_video:
                 writer.append_data(iio3.imread(png))
@@ -185,9 +195,21 @@ class DataPlotter(dcm.BaseData):
         # Reset the frames
         self.clean_frame_for_video()
 
-    def _get_video_path(self, patient_id: str, folder_path: str) -> str:
+    def _check_num_frame(self, patient_id: str, num_frame_expected: int):
+        num_frame_read: int = len(self._frame_for_video)
+        if num_frame_read != num_frame_expected:
+            raise ex.NotEnoughPngFiles(patient_id, num_frame_read, num_frame_expected)
+
+    def _get_video_folder(self, model_phase: dcm.DatasetType) -> str:
+        return self.compose_path(
+            self._dataset_output_folder_name,
+            model_phase,
+            cm.FolderName.VIDEO,
+        )
+
+    def _get_video_path(self, patient_id: str, video_folder: str) -> str:
         file_name: str = f"video_{patient_id}.mp4"
-        return self.compose_path(folder_path, cm.FolderName.IMAGE, file_name)
+        return self.compose_path(video_folder, file_name)
 
     @staticmethod
     def get_video_writer(video_path: str):
