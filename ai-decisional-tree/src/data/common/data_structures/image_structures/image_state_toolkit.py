@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Callable
 
-import src.data.common.data_structures.flag as f
-import src.data.common.data_structures.image_range as ir
+import src.data.common.data_structures.image_structures.flag as f
+import src.data.common.data_structures.image_structures.image_range as ir
 
 
 @dataclass(frozen=True)
