@@ -1,16 +1,28 @@
 # AI Decisional Tree
 
-Python project for loading and checking the **CPAISD (Core-Penumbra Acute
-Ischemic Stroke Dataset)**. The current code downloads the dataset, reads its
+Python project for loading and checking the CPAISD (Core-Penumbra Acute
+Ischemic Stroke Dataset). The current code downloads the dataset, reads its
 study summary, separates studies by split, and checks that the corresponding
-study folders are present. It is an early-stage data-loading scaffold: decision
-tree training, CT/mask loading, analysis, and plotting are not implemented yet.
+study folders are present. This repository is a portfolio/demo project and is
+not intended for unrestricted reuse.
+
+## License
+
+This project is distributed under a proprietary license. All rights are
+reserved by the copyright holder.
+
+No permission is granted to use, copy, modify, distribute, sublicense, sell,
+or otherwise exploit this repository or any of its contents without prior
+written authorization from the copyright holder.
+
+The repository is public for demonstration and review purposes only. Public
+visibility does not imply permission for reuse.
 
 ## Dataset
 
-CPAISD contains **112 anonymized non-contrast CT studies** of hyperacute
-ischemic stroke. The scans include expert annotations of the ischemic core and
-penumbra. Kaggle reports the following study and slice counts:
+CPAISD contains 112 anonymized non-contrast CT studies of hyperacute ischemic
+stroke. The scans include expert annotations of the ischemic core and penumbra.
+Kaggle reports the following study and slice counts:
 
 | Split | Studies | Slices |
 | --- | ---: | ---: |
@@ -21,7 +33,7 @@ penumbra. Kaggle reports the following study and slice counts:
 The dataset provides raw anonymized DICOM slices, NumPy image and mask files,
 and metadata. Study-level metadata includes scanner manufacturer and model,
 age, sex, NIHSS, time, and lethality; DICOM demographic/scanner fields are
-retained for research. The Kaggle download is approximately **8.6 GB**.
+retained for research. The Kaggle download is approximately 8.6 GB.
 
 - [Dataset on Kaggle](https://www.kaggle.com/datasets/orvile/cpaisd-acute-ischemic-stroke-dataset/data)
 - [Dataset DOI](https://doi.org/10.5281/zenodo.10892316)
@@ -81,7 +93,7 @@ If you use CPAISD, cite the dataset:
 > https://doi.org/10.5281/zenodo.10892316
 
 The dataset's license applies to the dataset; this repository is separately
-distributed under the MIT License (see [`LICENSE`](LICENSE)).
+under a proprietary license. See [`LICENSE`](LICENSE).
 
 ## Disclaimer
 
