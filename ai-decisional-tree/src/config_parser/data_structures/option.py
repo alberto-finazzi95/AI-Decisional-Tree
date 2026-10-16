@@ -6,3 +6,5 @@ class Option(StrEnum):
     OUTPUT_PATH =       "output_path"
     SAVE_IMG =          "save img"
     SAVE_VIDEO =        "save video"
+    SAVE_IMG_FILT =     "save img"
+    SAVE_VIDEO_FILT =   "save video"

@@ -1,3 +1,7 @@
+from typing import Any
+
+from traitlets import Callable
+
 import src.common as cm
 import src.config_parser as cp
 import src.data.common as dcm
@@ -5,6 +9,8 @@ import src.data.data_loader as dl
 import src.data.data_plotter as dp
 import src.data.data_analyzer as da
 import src.data.data_toolkit as dt
+import src.data.data_manager.exceptions as ex
+import src.data.data_manager.data_structures as ds
 
 
 class DataManager:
@@ -19,14 +25,12 @@ class DataManager:
 
     def __init__(
             self,
-            folder_manager: cm.FolderManager,
             data_toolkit: dt.DataToolkit,
     ):
         """
         Initializes the DataManager with instances of DataLoader, DataPlotter, and DataAnalyzer.
 
         Args:
-            folder_manager (FolderManager): An instance of the FolderManager class.
             data_toolkit (DataToolkit): An instance of the DataToolkit class.
         """
         # Initialize the base class with the provided folder manager and config parser
@@ -34,8 +38,7 @@ class DataManager:
         self._config_parser:  cp.ConfigParser = data_toolkit.config_parser
 
         # Get initial flags
-        self._create_img: bool = self._config_parser.save_img
-        self._create_video: bool = self._config_parser.save_video
+        self._set_flags()
 
         # Initialize the DataLoader, DataPlotter, and DataAnalyzer instances
         self._data_loader: dl.DataLoader = data_toolkit.data_loader
@@ -49,6 +52,8 @@ class DataManager:
 
         # Set the initial state of the DataManager to TRAIN
         self._state: dcm.DatasetType = dcm.DatasetType.TRAIN
+        # State of the image processing
+        self._image_state: ds.ImageState = ds.ImageState.RAW
 
     @property
     def state(self) -> dcm.DatasetType:
@@ -58,26 +63,109 @@ class DataManager:
     def state(self, value: dcm.DatasetType):
         self._state = value
 
-    def plot_all_tacs(self):
-        """
-        Plots the TACs for all patients in the dataset.
-        """
-        if (not self._create_img) and (not self._create_video):
+    def _set_flags(self):
+        # RAW
+        raw_flag: ds.Flag = ds.Flag(
+            img=self._config_parser.save_img,
+            video=self._config_parser.save_video,
+        )
+        raw_img_state_tlk: ds.ImageStateToolkit = ds.ImageStateToolkit(
+            flag=raw_flag,
+            create_tac_fn=self.create_tac,
+            store_tac_png_fn=self.store_tac_png,
+            store_tac_video_fn=self.store_tac_video,
+        )
+        # FILTERED
+        filt_flag: ds.Flag = ds.Flag(
+            img=self._config_parser.save_img_filt,
+            video=self._config_parser.save_video_filt,
+        )
+        filt_img_state_tlk: ds.ImageStateToolkit = ds.ImageStateToolkit(
+            flag=filt_flag,
+            create_tac_fn=self.create_filter_tac,
+            store_tac_png_fn=self.store_tac_filter_png,
+            store_tac_video_fn=self.store_tac_filter_video,
+        )
+
+        # Storing the image state toolkit for each image state
+        self._IMG_STATE_TLK_DICT: dict[ds.ImageState, ds.ImageStateToolkit] = \
+        {
+            ds.ImageState.RAW: raw_img_state_tlk,
+            ds.ImageState.FILTER: filt_img_state_tlk,
+        }
+
+    @property
+    def image_state_toolkit(self) -> ds.ImageStateToolkit:
+        try:
+            return self._IMG_STATE_TLK_DICT[self._image_state]
+        except KeyError:
+            raise ex.ImageStateToolkitNotFound(self._image_state)
+
+    @property
+    def flag(self) -> ds.Flag:
+        return self.image_state_toolkit.flag
+
+    @property
+    def create_tac_fn(self) -> Any:
+        return self.image_state_toolkit.create_tac_fn
+
+    @property
+    def store_tac_png_fn(self) -> Any:
+        return self.image_state_toolkit.store_tac_png_fn
+
+    @property
+    def store_tac_video_fn(self) -> Any:
+        return self.image_state_toolkit.store_tac_video_fn
+
+    def check_flag(self) -> bool:
+        if self.flag.all_media_disabled():
             print(f"[{self._state}] Don't create any images or videos as configuration settings.")
+            return True
+        return False
+
+    def _create_tacs_for_state(self, image_state: ds.ImageState):
+        self._image_state = image_state
+        print(f"Image state is: {self._image_state.name}")
+        # Check the flags if it is necessary to plot images or videos
+        if self.check_flag():
             return
+
         for single_study in self.all_studies:
             study_id: str = single_study.study_id
             num_frame: int = single_study.num_subfolders
             print(f"Plotting TACs for patient: {study_id} with {single_study.num_subfolders} frames.")
             for i_frame in range(num_frame):
+                if not self.flag.img:
+                    print("Don't create any images as configuration settings.")
+                    return
                 # Plot the TAC for each patient and frame
-                self.plot_tac(study_id, i_frame)
+                self.create_tac_fn(study_id, i_frame)
                 # Store the plotted TAC as a PNG file for further analysis
-                self.store_tac_png(study_id, i_frame)
+                self.store_tac_png_fn(study_id, i_frame)
             # Store the plotted TACs for the patient as a video
-            self.store_tac_video(study_id, num_frame)
+            self.store_tac_video_fn(study_id, num_frame)
 
-    def plot_tac(self, patient_id: str, num_img: int):
+    def create_all_tacs(self):
+        """
+        Plots the TACs for all patients in the dataset.
+        """
+        self._create_tacs_for_state(ds.ImageState.RAW)
+
+    def create_all_tacs_filtered(self):
+        """
+        Plots the TACs filtered for all patients in the dataset.
+        """
+        self._create_tacs_for_state(ds.ImageState.FILTER)
+
+    def get_patient_img_path(self, patient_id: str, num_img: int):
+        # Get the patient image path for the specified patient ID and image index
+        patient_img_path: str = self.get_subfolders(patient_id)[num_img]
+        # Check if the patient image path exists before plotting
+        if not self.path_exists(patient_img_path):
+            raise cm.NoFolderFound(patient_img_path)
+        return patient_img_path
+
+    def create_tac(self, patient_id: str, num_img: int):
         """
         Plots the TACs for a given patient ID.
 
@@ -85,27 +173,39 @@ class DataManager:
             patient_id (str): The ID of the patient whose TACs are to be plotted.
             num_img (int): The index of the image to plot.
         """
-        # Get the patient image path for the specified patient ID and image index
-        patient_img_path: str = self.get_subfolders(patient_id)[num_img]
-        # Check if the patient image path exists before plotting
-        if not self.path_exists(patient_img_path):
-            raise cm.NoFolderFound(patient_img_path)
+        patient_img_path: str = self.get_patient_img_path(patient_id, num_img)
         # Plot the TAC for the specified patient image path
-        self._data_plotter.plot_tac(patient_img_path, patient_id, num_img)
+        self._data_plotter.create_tac(patient_img_path, patient_id, num_img)
 
     def store_tac_png(self, patient_id: str, num_img: int):
-        if not self._create_img:
-            print("Don't create any images as configuration settings.")
-            return
         # Store the plotted TAC for further analysis
         patient_path: str = self.get_path(patient_id)
         self._data_plotter.save_tac(patient_path, num_img)
 
     def store_tac_video(self, patient_id: str, num_frame: int):
-        if not self._create_video:
+        if not self.flag.video:
             print("Don't create any videos as configuration settings.")
             return
         self._data_plotter.save_video(patient_id, num_frame, self._state)
+
+    def create_filter_tac(self, patient_id: str, num_img: int):
+        """
+        Plots the filtered TACs for a given patient ID.
+
+        Args:
+            patient_id (str): The ID of the patient whose TACs are to be plotted.
+            num_img (int): The index of the image to plot.
+        """
+        patient_img_raw_path: str = self.get_patient_img_path(patient_id, num_img)
+        # Filter the img
+        self._data_analyzer.filter_frame(patient_img_raw_path)
+        # Plot the TAC for the specified patient image path
+
+    def store_tac_filter_png(self, patient_id: str, num_img: int):
+        pass
+
+    def store_tac_filter_video(self, patient_id: str, num_frame: int):
+        pass
 
     def path_exists(self, path: str) -> bool:
         """

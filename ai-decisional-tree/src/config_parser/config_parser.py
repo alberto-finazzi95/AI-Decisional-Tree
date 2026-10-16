@@ -22,3 +22,11 @@ class ConfigParser(cpb.ConfigParserBase):
     @property
     def save_video(self) -> bool:
         return self.get_boolean(ds.Section.STORAGE, ds.Option.SAVE_VIDEO)
+
+    @property
+    def save_img_filt(self) -> bool:
+        return self.get_boolean(ds.Section.STORAGE, ds.Option.SAVE_IMG_FILT)
+
+    @property
+    def save_video_filt(self) -> bool:
+        return self.get_boolean(ds.Section.STORAGE, ds.Option.SAVE_VIDEO_FILT)

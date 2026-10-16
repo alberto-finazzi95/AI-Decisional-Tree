@@ -21,7 +21,6 @@ if __name__ == "__main__":
 
     # Data Manager to handle data operations
     data_manager: src.DataManager = src.DataManager(
-        folder_manager=folder_manager,
         data_toolkit=data_toolkit,
     )
 
@@ -30,4 +29,6 @@ if __name__ == "__main__":
         # For train, val and test set
         data_manager.state = state
         # Plot all raw TACs as images and videos
-        data_manager.plot_all_tacs()
+        data_manager.create_all_tacs()
+        # Plot all filtered TACs as images and videos
+        data_manager.create_all_tacs_filtered()

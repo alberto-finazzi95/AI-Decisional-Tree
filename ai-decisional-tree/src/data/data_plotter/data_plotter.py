@@ -6,9 +6,11 @@ import imageio.v3 as iio3
 
 import src.common as cm
 import src.config_parser as cp
+import src.image_manager as im
 import src.data.common as dcm
 import src.data.data_plotter.exceptions as ex
 import src.data.data_plotter.data_structures as ds
+from src.image_manager import image_manager
 
 
 class DataPlotter(dcm.BaseData):
@@ -38,17 +40,12 @@ class DataPlotter(dcm.BaseData):
         self._clear_axes()
 
     def load_matrices(self, patient_img_path: str) -> tuple[np.ndarray, np.ndarray]:
-        # Compose the paths for the image and mask files
-        img_path: str = self.compose_path(patient_img_path, ds.ImageFileType.IMG)
-        mask_path: str = self.compose_path(patient_img_path, ds.ImageFileType.MASK)
+        # Create the object to manage images
+        img_manager: im.ImageManager = im.ImageManager(patient_img_path, self._folder_manager)
+        # Load the matrices
+        return img_manager.load_matrices()
 
-        # Load the image and mask data
-        img_matrix: np.ndarray = self.load_img(img_path)
-        mask_matrix: np.ndarray = self.load_img(mask_path)
-
-        return img_matrix, mask_matrix
-
-    def plot_tac(self, patient_img_path: str, patient_id: str, num_img: int):
+    def create_tac(self, patient_img_path: str, patient_id: str, num_img: int):
         # Load the image and mask data
         img_matrix, mask_matrix = self.load_matrices(patient_img_path)
 
@@ -132,13 +129,6 @@ class DataPlotter(dcm.BaseData):
             pad=0.04,
         )
         cbar.ax.set_yticklabels(self.TICK_LABELS)
-
-    @staticmethod
-    def load_img(img_path: str) -> np.ndarray:
-        with np.load(img_path) as img_data:
-            # Extract the image matrix from the loaded npz file
-            img_key: str = next(iter(img_data.keys()))
-            return img_data[img_key]
 
     def save_tac(
             self,
