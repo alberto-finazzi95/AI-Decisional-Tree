@@ -6,3 +6,5 @@ class FolderName(StrEnum):
     DATASET = "dataset"
     IMAGE = "image"
     VIDEO = "video"
+    IMAGE_FLT = "image filtered"
+    VIDEO_FLT = "video filtered"

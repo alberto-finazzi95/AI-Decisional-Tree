@@ -31,6 +31,16 @@ class DataToolkit:
             os_manager=os_manager
         )
 
+        # Add to a list the data objects
+        self._data_obj_tuple: tuple = (
+            self.data_loader,
+            self.data_plotter,
+            self.data_analyzer,
+        )
         # Config parser and folder manager instances
         self.config_parser: cp.ConfigParser = config_parser
         self.folder_manager: cm.FolderManager = folder_manager
+
+    def reset_img_manager_dict(self):
+        for data_obj in self._data_obj_tuple:
+            data_obj.clean_img_manager_dict()

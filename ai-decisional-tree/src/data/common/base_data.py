@@ -1,7 +1,10 @@
 from abc import ABC
 
+import numpy as np
+
 import src.common as cm
 import src.config_parser as cp
+import src.image_manager.image_manager as im
 
 
 class BaseData(ABC):
@@ -14,6 +17,9 @@ class BaseData(ABC):
         self._folder_manager: cm.FolderManager = folder_manager
         self._config_parser: cp.ConfigParser = config_parser
         self._os_manager: cm.OsManager = os_manager if os_manager is not None else cm.OsWrapper()
+
+        # Variables
+        self._img_manager_dict: dict[str, im.ImageManager] = {}
 
         # General settings
         self._set_folders()
@@ -47,6 +53,27 @@ class BaseData(ABC):
 
     def compose_path(self, *args: str) -> str:
         return self._folder_manager.compose_folders(*args, str_format=True)
+
+    def get_img_manager(self, patient_img_path: str) -> im.ImageManager:
+        if patient_img_path not in self._img_manager_dict:
+            # Create the object to manage images
+            img_manager: im.ImageManager = im.ImageManager(patient_img_path, self._folder_manager)
+            # Store in the dictionary
+            self._img_manager_dict[patient_img_path] = img_manager
+        return self._img_manager_dict[patient_img_path]
+
+    def clean_img_manager_dict(self):
+        self._img_manager_dict.clear()
+
+    def load_matrices(self, patient_img_path: str) -> tuple[np.ndarray, np.ndarray]:
+        img_manager: im.ImageManager = self.get_img_manager(patient_img_path)
+        # Load the matrices
+        return img_manager.img_matrix, img_manager.mask_matrix
+
+    def load_filtered_matrices(self, patient_img_path: str) -> tuple[np.ndarray, np.ndarray]:
+        img_manager: im.ImageManager = self.get_img_manager(patient_img_path)
+        # Load the matrices
+        return img_manager.img_flt_matrix, img_manager.mask_matrix
 
     def path_exists(self, path: str) -> bool:
         """

@@ -6,11 +6,10 @@ import imageio.v3 as iio3
 
 import src.common as cm
 import src.config_parser as cp
-import src.image_manager as im
 import src.data.common as dcm
+
 import src.data.data_plotter.exceptions as ex
 import src.data.data_plotter.data_structures as ds
-from src.image_manager import image_manager
 
 
 class DataPlotter(dcm.BaseData):
@@ -39,16 +38,14 @@ class DataPlotter(dcm.BaseData):
         self._fig, self._axes = plt.subplots(1, 2, figsize=(12, 6))
         self._clear_axes()
 
-    def load_matrices(self, patient_img_path: str) -> tuple[np.ndarray, np.ndarray]:
-        # Create the object to manage images
-        img_manager: im.ImageManager = im.ImageManager(patient_img_path, self._folder_manager)
-        # Load the matrices
-        return img_manager.load_matrices()
-
-    def create_tac(self, patient_img_path: str, patient_id: str, num_img: int):
-        # Load the image and mask data
-        img_matrix, mask_matrix = self.load_matrices(patient_img_path)
-
+    def create_tac(
+            self,
+            img_matrix: np.ndarray,
+            mask_matrix: np.ndarray,
+            patient_id: str,
+            num_img: int,
+            img_range: dcm.ImageRange,
+    ):
         # Closing a pyplot window unregisters its figure; create a new one if needed.
         self._close_figure_if_needed()
 
@@ -61,6 +58,7 @@ class DataPlotter(dcm.BaseData):
             0,
             img_matrix,
             self.IMG_TITLE,
+            img_range,
         )
         # Plot the mask
         self.plot_mask(
@@ -96,11 +94,12 @@ class DataPlotter(dcm.BaseData):
             ax_index: int,
             img_matrix: np.ndarray,
             title: str,
+            img_range: dcm.ImageRange,
     ):
         # Graphic 1: Native Brain CT (in grayscale, optimized for the brain)
         # We use vmin and vmax for an initial visual windowing (e.g., between 0 and 80 Hounsfield Units)
         ax: plt.Axes = self._axes[ax_index]
-        image: plt.AxesImage = ax.imshow(img_matrix, cmap='gray', vmin=0, vmax=80)
+        image: plt.AxesImage = ax.imshow(img_matrix, cmap='gray', vmin=img_range.lim_inf, vmax=img_range.lim_sup)
         ax.set_title(title)
         ax.figure.colorbar(image, ax=ax, label="Density (HU)", fraction=0.046, pad=0.04)
 
@@ -130,22 +129,36 @@ class DataPlotter(dcm.BaseData):
         )
         cbar.ax.set_yticklabels(self.TICK_LABELS)
 
-    def save_tac(
-            self,
-            patient_path: str,
-            num_img: int):
+    def _get_img_path(self, patient_path: str) -> str:
+        return self.compose_path(patient_path, cm.FolderName.IMAGE)
+
+    def _get_save_path(self, image_path: str, num_img: int) -> str:
+        return self.compose_path(image_path, f"tac_{num_img}.png")
+
+    def get_img_paths(self, patient_path: str, num_img: int) -> tuple[str, str]:
+        image_path: str = self._get_img_path(patient_path)
+        save_path: str = self._get_save_path(image_path, num_img)
+        return image_path, save_path
+
+    def _get_img_flt_path(self, patient_path: str) -> str:
+        return self.compose_path(patient_path, cm.FolderName.IMAGE_FLT)
+
+    def _get_save_flt_path(self, image_path: str, num_img: int) -> str:
+        return self.compose_path(image_path, f"tac_filtered_{num_img}.png")
+
+    def get_img_flt_paths(self, patient_path: str, num_img: int) -> tuple[str, str]:
+        image_flt_path: str = self._get_img_flt_path(patient_path)
+        save_flt_path: str = self._get_save_flt_path(image_flt_path, num_img)
+        return image_flt_path, save_flt_path
+
+    def save_tac(self, image_path: str, save_path: str):
         """
         Saves the current figure (TAC) to the specified path.
 
         Args:
-            patient_path (str): The path of the patient.
-            num_img (int): The index of the image.
+            image_path (str): The path of the patient images storage.
+            save_path (str): The path of the patient videos storage.
         """
-        image_path: str = self.compose_path(patient_path, cm.FolderName.IMAGE)
-        save_path: str = self.compose_path(
-            image_path,
-            f"tac_{num_img}.png"
-        )
         # Store the path of the saved TAC for video creation
         self._frame_for_video.append(save_path)
         # Ensure the image path exists; if not, create it
@@ -165,9 +178,7 @@ class DataPlotter(dcm.BaseData):
             print(f"Path '{folder_path}' does not exist. Creating...")
             self.create_folder(folder_path)
 
-    def save_video(self, patient_id: str, num_frame: int, model_phase: dcm.DatasetType):
-        # Video folder creation
-        video_folder: str = self._get_video_folder(model_phase)
+    def save_video(self, patient_id: str, num_frame: int, video_folder: str):
         self._create_not_existing_folder(video_folder)
         # Single video path
         video_path: str = self._get_video_path(patient_id, video_folder)
@@ -190,11 +201,18 @@ class DataPlotter(dcm.BaseData):
         if num_frame_read != num_frame_expected:
             raise ex.NotEnoughPngFiles(patient_id, num_frame_read, num_frame_expected)
 
-    def _get_video_folder(self, model_phase: dcm.DatasetType) -> str:
+    def get_video_folder(self, model_phase: dcm.DatasetType) -> str:
         return self.compose_path(
             self._dataset_output_folder_name,
             model_phase,
             cm.FolderName.VIDEO,
+        )
+
+    def get_video_flt_folder(self, model_phase: dcm.DatasetType) -> str:
+        return self.compose_path(
+            self._dataset_output_folder_name,
+            model_phase,
+            cm.FolderName.VIDEO_FLT,
         )
 
     def _get_video_path(self, patient_id: str, video_folder: str) -> str:
