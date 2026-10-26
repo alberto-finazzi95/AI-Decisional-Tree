@@ -8,3 +8,4 @@ class FolderName(StrEnum):
     VIDEO = "video"
     IMAGE_FLT = "image filtered"
     VIDEO_FLT = "video filtered"
+    VOLUMES = "volumes"

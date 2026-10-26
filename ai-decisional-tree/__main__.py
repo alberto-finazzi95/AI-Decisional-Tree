@@ -32,3 +32,5 @@ if __name__ == "__main__":
         data_manager.create_all_tacs()
         # Plot all filtered TACs as images and videos
         data_manager.create_all_tacs_filtered()
+        # Create the volumes files for the model
+        data_manager.create_volume_tacs()

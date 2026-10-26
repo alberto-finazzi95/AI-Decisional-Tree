@@ -1,5 +1,7 @@
 from typing import Any
 
+import pandas as pd
+
 import src.common as cm
 import src.config_parser as cp
 import src.data.common as dcm
@@ -8,6 +10,7 @@ import src.data.data_plotter as dp
 import src.data.data_analyzer as da
 import src.data.data_toolkit as dt
 import src.data.data_manager.exceptions as ex
+import src.volume_manager as vm
 
 
 class DataManager:
@@ -51,10 +54,13 @@ class DataManager:
         self._folder_manager: cm.FolderManager = self._data_toolkit.folder_manager
         self._config_parser:  cp.ConfigParser = self._data_toolkit.config_parser
 
-        # Initialize the DataLoader, DataPlotter, and DataAnalyzer instances
+        # Initialize the DataLoader, DataPlotter and DataAnalyzer instances
         self._data_loader: dl.DataLoader = self._data_toolkit.data_loader
         self._data_plotter: dp.DataPlotter = self._data_toolkit.data_plotter
         self._data_analyzer: da.DataAnalyzer = self._data_toolkit.data_analyzer
+
+        # Define the Volume Manager to create the data for the 3D tac
+        self._volume_manager: vm.VolumeManager = vm.VolumeManager()
 
         # Get initial flags
         self._set_flags()
@@ -206,7 +212,7 @@ class DataManager:
         for single_study in self.all_studies:
             study_id: str = single_study.study_id
             num_frame: int = single_study.num_subfolders
-            print(f"Plotting TACs for patient: {study_id} with {single_study.num_subfolders} frames.")
+            print(f"[Images] TACs for patient: {study_id} with {num_frame} frames.")
             for i_frame in range(num_frame):
                 if not self.flag.img:
                     print("Don't create any images as configuration settings.")
@@ -219,6 +225,35 @@ class DataManager:
             self.store_tac_video_fn(study_id, num_frame)
             # Reset some variables
             self._reset_vars()
+
+    def create_volume_tacs(self):
+        # Looping in each single study
+        for single_study in self.all_studies:
+            study_id: str = single_study.study_id
+            num_frame: int = single_study.num_subfolders
+            print(f"[Volume] TACs for patient: {study_id} with {single_study.num_subfolders} frames.")
+            for i_frame in range(num_frame):
+                # Concatenate the tacs to have the volume of the head\brain
+                self.concatenate_tac(study_id, i_frame)
+            # Store the 3D image into a single file
+            self.store_volume_tac(study_id)
+
+    def concatenate_tac(self, patient_id: str, num_img: int):
+        patient_img_path: str = self.get_patient_img_path(patient_id, num_img)
+        # Load the matrices
+        img_matrix, mask_matrix = self._data_plotter.load_matrices(patient_img_path)
+        self._volume_manager.add_img(img_matrix)
+        self._volume_manager.add_msk(mask_matrix)
+
+    def store_volume_tac(self, patient_id: str):
+        # Build the volume
+        self._volume_manager.build()
+        # Get the dataframe
+        df: pd.DataFrame = self._volume_manager.to_dataframe()
+        # Store the file in the pc
+        self._data_loader.store_volume(df, patient_id, self._state)
+        # Finally clean the object
+        self._volume_manager.clean()
 
     def _reset_vars(self):
         """

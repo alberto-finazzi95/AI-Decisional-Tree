@@ -101,3 +101,8 @@ class BaseData(ABC):
             folder_path (str): The path where the folder should be created.
         """
         self._folder_manager.create_folder(folder_path)
+
+    def _create_not_existing_folder(self, folder_path: str):
+        if not self.path_exists(folder_path):
+            print(f"Path '{folder_path}' does not exist. Creating...")
+            self.create_folder(folder_path)

@@ -173,11 +173,6 @@ class DataPlotter(dcm.BaseData):
         self._fig.savefig(save_path)
         print(f"TAC saved to {save_path}")
 
-    def _create_not_existing_folder(self, folder_path: str):
-        if not self.path_exists(folder_path):
-            print(f"Path '{folder_path}' does not exist. Creating...")
-            self.create_folder(folder_path)
-
     def save_video(self, patient_id: str, num_frame: int, video_folder: str):
         self._create_not_existing_folder(video_folder)
         # Single video path

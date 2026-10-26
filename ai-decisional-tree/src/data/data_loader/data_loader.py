@@ -6,6 +6,13 @@ import src.data.common as dcm
 import src.data.data_loader.exceptions as ex
 
 
+def _set_new_columns(summary_df: pd.DataFrame):
+    # Adding new columns to the summary DataFrame for file paths, subfolders, and number of subfolders
+    summary_df[dcm.Feature.PATH] = ""
+    summary_df[dcm.Feature.NUM_SUB] = 0
+    summary_df[dcm.Feature.SUBFOLDERS] = ""
+
+
 class DataLoader(dcm.BaseData):
     SUB_FOLDER_PREFIX: str = "00"
     TENTATIVES: int = 4
@@ -123,12 +130,6 @@ class DataLoader(dcm.BaseData):
             if missing_files:
                 raise ex.MissingFilesError(dataset_type, missing_files)
 
-    def _set_new_columns(self, summary_df: pd.DataFrame):
-        # Adding new columns to the summary DataFrame for file paths, subfolders, and number of subfolders
-        summary_df[dcm.Feature.PATH] = ""
-        summary_df[dcm.Feature.NUM_SUB] = 0
-        summary_df[dcm.Feature.SUBFOLDERS] = ""
-
     def _check_dataset_type(
             self,
             dataset_type: dcm.DatasetType,
@@ -137,7 +138,7 @@ class DataLoader(dcm.BaseData):
         missing_files: list = []
         dataset_type_folder: str = self._get_dataset_type_folder(dataset_type)
         # Setting the number of subfolders column to integer type to avoid issues with NaN values
-        self._set_new_columns(summary_df)
+        _set_new_columns(summary_df)
         for _, row in summary_df.iterrows():
             data_name: str = row[dcm.Feature.NAME]
             data_path: str = self._get_data_path(data_name, dataset_type_folder)
@@ -150,3 +151,24 @@ class DataLoader(dcm.BaseData):
             self._adding_subfolders_to_summary(dataset_type, data_name, data_path)
         return missing_files
 
+    def get_volumes_folder(self, model_phase: dcm.DatasetType) -> str:
+        return self.compose_path(
+            self._dataset_output_folder_name,
+            model_phase,
+            cm.FolderName.VOLUMES,
+        )
+
+    def _get_patient_volume_path(self, patient_id: str, volumes_folder: str) -> str:
+        return self.compose_path(
+            volumes_folder,
+            f"vol_{patient_id}_tabular.parquet"
+        )
+
+    def store_volume(self, df: pd.DataFrame, patient_id: str, model_phase: dcm.DatasetType):
+        volumes_folder: str = self.get_volumes_folder(model_phase)
+        # Ensure the image path exists; if not, create it
+        self._create_not_existing_folder(volumes_folder)
+        volume_file_path: str = self._get_patient_volume_path(patient_id, volumes_folder)
+        # Store the parquet file in the file system
+        df.to_parquet(volume_file_path, compression='snappy', index=False)
+        print(f"Volume saved successfully! Rows loaded: {len(df)} -> File: {volume_file_path}")
