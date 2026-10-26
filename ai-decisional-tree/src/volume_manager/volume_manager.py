@@ -4,7 +4,6 @@ import scipy.ndimage as ndimg
 from numba import njit
 
 import src.volume_manager.data_structures as ds
-import src.volume_manager.volume_record as vr
 
 
 class VolumeManager:
@@ -26,7 +25,7 @@ class VolumeManager:
         self.y: int = 0
         self.z: int = 0
         # The elaborated data
-        self._records: list[vr.VolumeRecord] = []
+        self._records: list[dict] = []
 
     def clean(self):
         # List of tacs
@@ -51,7 +50,7 @@ class VolumeManager:
         return self._vol_msk
 
     @property
-    def records(self) -> list[vr.VolumeRecord]:
+    def records(self) -> list[dict]:
         return self._records
 
     def add_img(self, img_matrix: np.ndarray):
@@ -143,12 +142,12 @@ class VolumeManager:
             y: int = int(y_idx[i])
             x: int = int(x_idx[i])
 
-            volume_record: vr.VolumeRecord = vr.VolumeRecord(
-                metadata_z_norm=z / num_slices,
-                stat_local_mean_3d=float(means[i]),
-                stat_local_std_3d=float(stds[i]),
-                target_class=int(labels[i]),
-            )
+            volume_record: dict = {
+                ds.ParamEnum.META_NORM: z / num_slices,
+                ds.ParamEnum.STAT_MEAN_3D: float(means[i]),
+                ds.ParamEnum.STAT_MEAN_STD: float(stds[i]),
+                ds.ParamEnum.TARGET: int(labels[i]),
+            }
 
             # Attach the 27-neighborhood values around this voxel.
             # This adds contextual information for classification/regression features.
@@ -162,24 +161,22 @@ class VolumeManager:
             x: int,
             y: int,
             z: int,
-            volume_record: vr.VolumeRecord):
+            volume_record: dict):
         # Dynamically extract all 27 pixels from the surrounding 3x3x3 cube
         # dz=-1 (previous slice), dz=0 (current slice), dz=1 (next slice)
         for dz in self.WINDOW_RANGE:
             for dy in self.WINDOW_RANGE:
                 for dx in self.WINDOW_RANGE:
-                    # Creating the pixel
-                    pixel: ds.Pixel = ds.Pixel(x=dx, y=dy, z=dz)
+                    # Creating the pixel name
+                    key: str = f"pixel_x_{dx}_y_{dy}_z_{dz}"
                     # Getting the value
                     value: float = self._vol_img[z + dz, y + dy, x + dx]
                     # Storing in the record
-                    volume_record.add_pixel(pixel, value)
+                    volume_record[key] = value
 
     def to_dataframe(self) -> pd.DataFrame:
-        # Convert into a list of dictionaries
-        total_data_records: list = [record.to_dict() for record in self._records]
         # Return the dataframe
-        return pd.DataFrame(total_data_records)
+        return pd.DataFrame(self._records)
 
 
 @njit(cache=True)
