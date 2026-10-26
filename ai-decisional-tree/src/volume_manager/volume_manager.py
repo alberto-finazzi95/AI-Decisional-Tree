@@ -25,7 +25,7 @@ class VolumeManager:
         self.y: int = 0
         self.z: int = 0
         # The elaborated data
-        self._records: list[dict] = []
+        self._records: pd.DataFrame = pd.DataFrame()
 
     def clean(self):
         # List of tacs
@@ -39,7 +39,7 @@ class VolumeManager:
         self.y = 0
         self.z = 0
         # The elaborated data
-        self._records.clear()
+        self._records = pd.DataFrame()
 
     @property
     def vol_img(self) -> np.ndarray:
@@ -50,7 +50,7 @@ class VolumeManager:
         return self._vol_msk
 
     @property
-    def records(self) -> list[dict]:
+    def records(self) -> pd.DataFrame:
         return self._records
 
     def add_img(self, img_matrix: np.ndarray):
@@ -105,7 +105,7 @@ class VolumeManager:
         return len(self._img_list)
 
     def build(self):
-        # Rebuild the full 3D volume from the per-slice CT images and masks.
+                # Rebuild the full 3D volume from the per-slice CT images and masks.
         # This is the compact representation used for all subsequent processing.
         self._vol_img = np.array(self._img_list)
         self._vol_msk = np.array(self._msk_list)
@@ -123,6 +123,12 @@ class VolumeManager:
         # Keep only the voxels that are relevant for training/inference:
         # non-empty voxels or voxels adjacent to non-empty ones.
         # This removes a large amount of background-only data from the pipeline.
+        z_idx: np.ndarray
+        y_idx: np.ndarray
+        x_idx: np.ndarray
+        means: np.ndarray
+        stds: np.ndarray
+        labels: np.ndarray
         z_idx, y_idx, x_idx, means, stds, labels = _extract_valid_voxels(
             self._vol_img,
             self._vol_msk,
@@ -132,51 +138,43 @@ class VolumeManager:
 
         # Reset the record list before filling it with the new patient volume.
         # This prevents stale records from previous builds from remaining in memory.
-        self._records = []
+        self._records = pd.DataFrame()
 
-        # Rebuild one VolumeRecord per valid voxel.
-        # Each record contains the normalized z coordinate, local stats, target class,
-        # and the surrounding 3x3x3 neighborhood values used as features.
-        for i in range(len(z_idx)):
-            z: int = int(z_idx[i])
-            y: int = int(y_idx[i])
-            x: int = int(x_idx[i])
+        # Convert to fixed-size integer arrays to improve indexing efficiency.
+        z_idx = z_idx.astype(np.int32)
+        y_idx = y_idx.astype(np.int32)
+        x_idx = x_idx.astype(np.int32)
 
-            volume_record: dict = {
-                ds.ParamEnum.META_NORM: z / num_slices,
-                ds.ParamEnum.STAT_MEAN_3D: float(means[i]),
-                ds.ParamEnum.STAT_MEAN_STD: float(stds[i]),
-                ds.ParamEnum.TARGET: int(labels[i]),
-            }
+        # Precompute all 27 neighborhood offsets used by the 3x3x3 cube.
+        # Each tuple represents the relative displacement in (z, y, x) coordinates.
+        offsets: list[tuple[int, int, int]] = [
+            (dz, dy, dx)
+            for dz in self.WINDOW_RANGE
+            for dy in self.WINDOW_RANGE
+            for dx in self.WINDOW_RANGE
+        ]
 
-            # Attach the 27-neighborhood values around this voxel.
-            # This adds contextual information for classification/regression features.
-            self.pixel_neighborhood(x, y, z, volume_record)
+        # neighborhood shape: (N_valid_voxels, 27)
+        # We fill one column per offset so we avoid the Python-level for-loop over voxels.
+        neighborhood: np.ndarray = np.empty((len(z_idx), len(offsets)), dtype=np.float32)
+        for i, (dz, dy, dx) in enumerate(offsets):
+            neighborhood[:, i] = self._vol_img[z_idx + dz, y_idx + dy, x_idx + dx]
 
-            # Save the completed record in the final dataset for this volume.
-            self._records.append(volume_record)
+        # Build the DataFrame columns directly as NumPy arrays.
+        # This keeps the output compatible with downstream code while avoiding per-voxel
+        # Python object creation.
+        data: dict[str, np.ndarray] = {
+            ds.ParamEnum.META_NORM: z_idx.astype(np.float32) / num_slices,
+            ds.ParamEnum.STAT_MEAN_3D: means.astype(np.float32),
+            ds.ParamEnum.STAT_MEAN_STD: stds.astype(np.float32),
+            ds.ParamEnum.TARGET: labels.astype(np.int16),
+        }
 
-    def pixel_neighborhood(
-            self,
-            x: int,
-            y: int,
-            z: int,
-            volume_record: dict):
-        # Dynamically extract all 27 pixels from the surrounding 3x3x3 cube
-        # dz=-1 (previous slice), dz=0 (current slice), dz=1 (next slice)
-        for dz in self.WINDOW_RANGE:
-            for dy in self.WINDOW_RANGE:
-                for dx in self.WINDOW_RANGE:
-                    # Creating the pixel name
-                    key: str = f"pixel_x_{dx}_y_{dy}_z_{dz}"
-                    # Getting the value
-                    value: float = self._vol_img[z + dz, y + dy, x + dx]
-                    # Storing in the record
-                    volume_record[key] = value
+        for i, (dz, dy, dx) in enumerate(offsets):
+            data[f"pixel_x_{dx}_y_{dy}_z_{dz}"] = neighborhood[:, i]
 
-    def to_dataframe(self) -> pd.DataFrame:
-        # Return the dataframe
-        return pd.DataFrame(self._records)
+        # Convert the columnar representation to row-oriented records in one final pass.
+        self._records = pd.DataFrame(data)
 
 
 @njit(cache=True)

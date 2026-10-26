@@ -249,7 +249,7 @@ class DataManager:
         # Build the volume
         self._volume_manager.build()
         # Get the dataframe
-        df: pd.DataFrame = self._volume_manager.to_dataframe()
+        df: pd.DataFrame = self._volume_manager.records
         # Store the file in the pc
         self._data_loader.store_volume(df, patient_id, self._state)
         # Finally clean the object
