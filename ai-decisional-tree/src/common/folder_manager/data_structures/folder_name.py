@@ -3,3 +3,9 @@ from enum import StrEnum
 
 class FolderName(StrEnum):
     CONFIG = "config"
+    DATASET = "dataset"
+    IMAGE = "image"
+    VIDEO = "video"
+    IMAGE_FLT = "image filtered"
+    VIDEO_FLT = "video filtered"
+    VOLUMES = "volumes"

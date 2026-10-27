@@ -1,8 +1,8 @@
 from .common import FolderManager, OsManager, OsWrapper
 from .config_parser import ConfigParser
-from .data_loader import DataLoader
+from .data import DataManager, DataToolkit, DatasetType
 
 
 __all__ = [
-    "FolderManager", "ConfigParser", "DataLoader", "OsManager", "OsWrapper"
+    "FolderManager", "ConfigParser", "DataManager", "OsManager", "OsWrapper", "DataToolkit", "DatasetType",
 ]
