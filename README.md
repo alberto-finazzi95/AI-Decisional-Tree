@@ -39,6 +39,16 @@ retained for research. The Kaggle download is approximately 8.6 GB.
 - [Dataset DOI](https://doi.org/10.5281/zenodo.10892316)
 - Dataset license: [MIT](https://opensource.org/licenses/MIT)
 
+## Recent updates
+
+The project has recently been updated to improve the volume-processing pipeline and make the export path more robust:
+
+- Added the missing Parquet backend dependency (`pyarrow`) so pandas can serialize tabular volume data to `.parquet` files.
+- Refactored the volume build pipeline to work with a DataFrame-based representation instead of per-voxel Python objects.
+- Optimized valid-voxel extraction with a vectorized NumPy/Numba mask-based approach that keeps only non-empty voxels and adjacent background boundary voxels.
+- Vectorized the 3x3x3 neighborhood extraction for the final tabular dataset, reducing Python-level overhead in the hot path.
+- Volume exports are now stored in the project output folders as parquet files, ready for downstream analysis and model training.
+
 ## Requirements and setup
 
 Use Python 3.11 or later. From the repository root, install the pinned
@@ -63,10 +73,9 @@ python .\ai-decisional-tree\__main__.py
 
 The entry point initializes the loader, plotter, and analyzer. The data manager
 validates the summary and split folders; its loader uses KaggleHub to download
-the configured dataset when needed. There is currently an initialization
-limitation: the summary path is resolved before the loader can start a download,
-so a fresh checkout must have the dataset in the expected layout before this
-entry point can run. There is no model-training or prediction command.
+the configured dataset when needed. The pipeline now also creates tabular volume
+exports in parquet format for each patient and stores them under the configured
+volume folders.
 
 ## Configuration and expected files
 
@@ -81,8 +90,8 @@ The loader expects to find `summary.csv` and the split folders under
 summary. The summary must include `name` and `part` columns; split values are
 `train`, `val`, and `test`. The loader partitions the summary by `part`, checks
 each listed study folder, and records its path and immediate subfolders. It
-does not currently read the individual DICOM, `.npz`, or per-study metadata
-files.
+also materializes per-patient tabular volume exports as parquet files when the
+volume-building step is executed.
 
 ## Citation
 
