@@ -11,9 +11,9 @@ class ImageManager:
         self._patient_path: str = patient_path
         self._folder_manager: cm.FolderManager = folder_manager
         # Setting the matrices
-        self._img_matrix: np.ndarray            = np.ndarray([])
-        self._img_flt_matrix: np.ndarray        = np.ndarray([])
-        self._mask_matrix: np.ndarray           = np.ndarray([])
+        self._img_matrix: np.ndarray = np.ndarray([])
+        self._img_flt_matrix: np.ndarray = np.ndarray([])
+        self._mask_matrix: np.ndarray = np.ndarray([])
         # Load the raw matrices
         self.load_matrices()
 
@@ -39,12 +39,12 @@ class ImageManager:
         return self._folder_manager.compose_folders(*args, str_format=True)
 
     def load_matrices(self):
-        img_path: str    = self.compose_path(self._patient_path, cm.ImageFileType.IMG)
-        mask_path: str   = self.compose_path(self._patient_path, cm.ImageFileType.MASK)
+        img_path: str = self.compose_path(self._patient_path, cm.ImageFileType.IMG)
+        mask_path: str = self.compose_path(self._patient_path, cm.ImageFileType.MASK)
 
         # Load the image and mask data
-        self._img_matrix: np.ndarray      = self.load_npz_matrix(img_path)
-        self._mask_matrix: np.ndarray     = self.load_npz_matrix(mask_path)
+        self._img_matrix: np.ndarray = self.load_npz_matrix(img_path)
+        self._mask_matrix: np.ndarray = self.load_npz_matrix(mask_path)
 
     def filer_img(self, bw_wl: float, bw_ww: float, m_w: int):
         # First brain window
@@ -53,11 +53,11 @@ class ImageManager:
         self._img_flt_matrix = self.median_filter(img_bw, m_w)
 
     @staticmethod
-    def brain_window(img_hu: np.ndarray, br_w_inf: float , br_w_sup: float ) -> np.ndarray:
+    def brain_window(img_hu: np.ndarray, br_w_inf: float, br_w_sup: float) -> np.ndarray:
         # Filtering
-        windowed: np.ndarray  = np.clip(img_hu, br_w_inf, br_w_sup)
+        windowed: np.ndarray = np.clip(img_hu, br_w_inf, br_w_sup)
         # Normalization
-        normalized: np.ndarray  = (windowed - br_w_inf) / (br_w_sup - br_w_inf)
+        normalized: np.ndarray = (windowed - br_w_inf) / (br_w_sup - br_w_inf)
         return normalized
 
     @staticmethod

@@ -4,5 +4,5 @@ from .image_state import ImageState
 from .image_state_toolkit import ImageStateToolkit
 
 __all__ = [
-    "ImageState", "ImageRange", "ImageStateToolkit"
+    "ImageState", "ImageRange", "ImageStateToolkit", "Flag"
 ]

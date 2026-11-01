@@ -6,7 +6,7 @@ def pixel_name(x: int, y: int, z: int) -> str:
 
 
 class ParamEnum(StrEnum):
-    META_NORM =         "metadata_z_norm"
-    STAT_MEAN_3D =      "stat_local_mean_3d"
-    STAT_MEAN_STD =     "stat_local_std_3d"
-    TARGET =            "target_class"
+    META_NORM = "metadata_z_norm"
+    STAT_MEAN_3D = "stat_local_mean_3d"
+    STAT_MEAN_STD = "stat_local_std_3d"
+    TARGET = "target_class"

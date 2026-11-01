@@ -16,7 +16,7 @@ def _set_new_columns(summary_df: pd.DataFrame):
 class DataLoader(dcm.BaseData):
     SUB_FOLDER_PREFIX: str = "00"
     TENTATIVES: int = 4
-    DATASET_TYPES: tuple[dcm.DatasetType] =(
+    DATASET_TYPES: tuple[dcm.DatasetType] = (
         dcm.DatasetType.TRAIN,
         dcm.DatasetType.VALIDATION,
         dcm.DatasetType.TEST,
@@ -26,7 +26,7 @@ class DataLoader(dcm.BaseData):
             self,
             folder_manager: cm.FolderManager,
             config_parser: cp.ConfigParser,
-            csv_manager: cm.CsvManager| None = None,
+            csv_manager: cm.CsvManager | None = None,
             os_manager: cm.OsManager | None = None,
     ):
         super().__init__(
@@ -35,7 +35,7 @@ class DataLoader(dcm.BaseData):
             os_manager=os_manager,
         )
         self._kaggle_dataset_name: str = self._config_parser.dataset_name
-        self._csv_manager: cm.CsvManager| None = csv_manager if csv_manager is not None else cm.CsvManagerWrapper()
+        self._csv_manager: cm.CsvManager | None = csv_manager if csv_manager is not None else cm.CsvManagerWrapper()
 
     def load_data(self) -> str:
         if self.folder_exists(self._dataset_extract_path):
