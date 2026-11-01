@@ -1,15 +1,14 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import matplotlib.colors as clr
 import imageio as iio
 import imageio.v3 as iio3
+import matplotlib.colors as clr
+import matplotlib.pyplot as plt
+import numpy as np
 
 import src.common as cm
 import src.config_parser as cp
 import src.data.common as dcm
-
-import src.data.data_plotter.exceptions as ex
 import src.data.data_plotter.data_structures as ds
+import src.data.data_plotter.exceptions as ex
 
 
 class DataPlotter(dcm.BaseData):

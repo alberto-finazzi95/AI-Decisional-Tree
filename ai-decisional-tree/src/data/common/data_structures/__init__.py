@@ -1,8 +1,7 @@
-from .feature import Feature
 from .dataset_type import DatasetType
-from .study import Study
+from .feature import Feature
 from .image_structures import Flag, ImageRange, ImageState, ImageStateToolkit
-
+from .study import Study
 
 __all__ = [
     "Feature", "DatasetType", "Study", "Flag", "ImageRange", "ImageState", "ImageStateToolkit"

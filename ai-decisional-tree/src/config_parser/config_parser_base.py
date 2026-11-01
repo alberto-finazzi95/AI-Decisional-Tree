@@ -1,9 +1,9 @@
-from abc import ABC
 import configparser
+from abc import ABC
 
 import src.common as cm
-import src.config_parser.exceptions as ex
 import src.config_parser.data_structures as ds
+import src.config_parser.exceptions as ex
 
 
 def config_error(func):

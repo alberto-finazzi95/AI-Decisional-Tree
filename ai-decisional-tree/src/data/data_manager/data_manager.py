@@ -5,11 +5,11 @@ import pandas as pd
 import src.common as cm
 import src.config_parser as cp
 import src.data.common as dcm
-import src.data.data_loader as dl
-import src.data.data_plotter as dp
 import src.data.data_analyzer as da
-import src.data.data_toolkit as dt
+import src.data.data_loader as dl
 import src.data.data_manager.exceptions as ex
+import src.data.data_plotter as dp
+import src.data.data_toolkit as dt
 import src.volume_manager as vm
 
 

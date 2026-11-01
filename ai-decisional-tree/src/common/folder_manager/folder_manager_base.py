@@ -2,8 +2,8 @@ from abc import ABC
 from pathlib import Path
 from typing import overload
 
-import src.common.folder_manager.exceptions as ex
 import src.common.folder_manager.data_structures as ds
+import src.common.folder_manager.exceptions as ex
 from src.common.os_manager import OsManager, OsWrapper
 
 

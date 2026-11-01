@@ -4,7 +4,6 @@ import sys
 import __version__ as v
 import src
 
-
 if __name__ == "__main__":
     print(f"Running SW version: {v.VERSION}")
     current_folder: str = os.path.dirname(os.path.abspath(sys.argv[0]))

@@ -1,7 +1,6 @@
 import unittest
 
 import pandas as pd
-
 import src.data.common as dcm
 import src.data.common.exceptions as ex
 

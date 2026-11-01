@@ -4,13 +4,12 @@ from io import BytesIO
 from pathlib import Path
 from unittest.mock import Mock, call, patch
 from zipfile import ZipFile
+
 from requests.exceptions import HTTPError, SSLError
-
-from tests.helper import OsMockFolder as omf
-
 from src.common.folder_manager import FolderManager
 from src.common.folder_manager.data_structures import FileName, FolderName
 from src.common.os_manager import OsManager, OsWrapper
+from tests.helper import OsMockFolder as omf
 
 
 class OsWrapperTests(unittest.TestCase):

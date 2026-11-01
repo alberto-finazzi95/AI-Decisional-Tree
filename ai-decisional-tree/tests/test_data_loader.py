@@ -2,7 +2,6 @@ import unittest
 from unittest.mock import Mock, call
 
 from requests.exceptions import SSLError
-
 from src.common import FolderManager, OsManager
 from src.config_parser import ConfigParser
 from src.data.data_loader import DataLoader

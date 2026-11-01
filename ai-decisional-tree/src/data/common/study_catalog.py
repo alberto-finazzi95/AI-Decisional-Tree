@@ -1,7 +1,7 @@
 import pandas as pd
 
-import src.data.common.exceptions as ex
 import src.data.common.data_structures as ds
+import src.data.common.exceptions as ex
 
 
 class StudyCatalog:

@@ -1,8 +1,8 @@
 from pathlib import Path
 
-import src.common.os_manager as osm
 import src.common.folder_manager.data_structures as ds
 import src.common.folder_manager.folder_manager_base as fmb
+import src.common.os_manager as osm
 
 
 class FolderManager(fmb.FolderManagerBase):

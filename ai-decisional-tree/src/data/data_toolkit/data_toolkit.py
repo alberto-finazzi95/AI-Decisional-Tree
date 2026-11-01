@@ -1,8 +1,8 @@
 import src.common as cm
 import src.config_parser as cp
-import src.data.data_plotter as dp
-import src.data.data_loader as dl
 import src.data.data_analyzer as da
+import src.data.data_loader as dl
+import src.data.data_plotter as dp
 
 
 class DataToolkit:
