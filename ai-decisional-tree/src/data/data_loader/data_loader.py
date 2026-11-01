@@ -62,8 +62,7 @@ class DataLoader(dcm.BaseData):
 
     def _create_study_catalogs(self):
         self._study_catalogs: dict[dcm.DatasetType, dcm.StudyCatalog] = {
-            dataset_type: dcm.StudyCatalog(summary_df)
-            for dataset_type, summary_df in self._SUMMARIES.items()
+            dataset_type: dcm.StudyCatalog(summary_df) for dataset_type, summary_df in self._SUMMARIES.items()
         }
 
     def get_study_catalog(self, dataset_type: dcm.DatasetType) -> dcm.StudyCatalog:
@@ -73,13 +72,15 @@ class DataLoader(dcm.BaseData):
             raise ex.StudyCatalogNotFound(dataset_type) from err
 
     def _get_summary(self, dataset_type: dcm.DatasetType) -> pd.DataFrame:
-        return self._summary_csv_raw[
-            self._summary_csv_raw[dcm.Feature.PART] == dataset_type
-        ].drop(columns=[dcm.Feature.PART])
+        return self._summary_csv_raw[self._summary_csv_raw[dcm.Feature.PART] == dataset_type].drop(
+            columns=[dcm.Feature.PART]
+        )
 
     def _load_summary(self):
         self._summary_csv_raw: pd.DataFrame = pd.read_csv(self._summary_csv_path)
-        print(f"Summary CSV loaded from {self._summary_csv_raw.shape[0]} rows and {self._summary_csv_raw.shape[1]} columns.")
+        print(
+            f"Summary CSV loaded from {self._summary_csv_raw.shape[0]} rows and {self._summary_csv_raw.shape[1]} columns."
+        )
         # Store the summaries in a dictionary for easy access
         self._SUMMARIES: dict[dcm.DatasetType, pd.DataFrame] = {
             data_type: self._get_summary(data_type) for data_type in self.DATASET_TYPES
@@ -87,9 +88,7 @@ class DataLoader(dcm.BaseData):
 
     def _set_file_path_in_summary(self, dataset_type: dcm.DatasetType, file_name: str, file_path: str):
         summary_df: pd.DataFrame = self._SUMMARIES[dataset_type]
-        summary_df.loc[
-            summary_df[dcm.Feature.NAME] == file_name, dcm.Feature.PATH
-        ] = file_path
+        summary_df.loc[summary_df[dcm.Feature.NAME] == file_name, dcm.Feature.PATH] = file_path
 
     def _get_data_path(self, data_name: str, dataset_type_folder: dcm.DatasetType) -> str:
         return self.compose_path(
@@ -106,21 +105,20 @@ class DataLoader(dcm.BaseData):
     def _adding_subfolders_to_summary(self, dataset_type: dcm.DatasetType, dataset_name: str, file_path: str):
         subfolders: list[str] = sorted(
             [
-                sub_folder for sub_folder in self._folder_manager.get_subfolders(file_path)
-                if sub_folder.startswith(self.SUB_FOLDER_PREFIX)  # Filter subfolders that start with the specified prefix
+                sub_folder
+                for sub_folder in self._folder_manager.get_subfolders(file_path)
+                if sub_folder.startswith(
+                    self.SUB_FOLDER_PREFIX
+                )  # Filter subfolders that start with the specified prefix
             ]
         )
         num_subfolders: int = len(subfolders)
         subfolders_str: str = ", ".join(subfolders)
         summary_df: pd.DataFrame = self._SUMMARIES[dataset_type]
         # Adding the number of subfolders to the summary DataFrame
-        summary_df.loc[
-            summary_df[dcm.Feature.NAME] == dataset_name, dcm.Feature.NUM_SUB
-        ] = num_subfolders
+        summary_df.loc[summary_df[dcm.Feature.NAME] == dataset_name, dcm.Feature.NUM_SUB] = num_subfolders
         # Adding the  subfolders to the summary DataFrame
-        summary_df.loc[
-            summary_df[dcm.Feature.NAME] == dataset_name, dcm.Feature.SUBFOLDERS
-        ] = subfolders_str
+        summary_df.loc[summary_df[dcm.Feature.NAME] == dataset_name, dcm.Feature.SUBFOLDERS] = subfolders_str
 
     def _check_files(self):
         for dataset_type, summary_df in self._SUMMARIES.items():
@@ -170,5 +168,5 @@ class DataLoader(dcm.BaseData):
         self._create_not_existing_folder(volumes_folder)
         volume_file_path: str = self._get_patient_volume_path(patient_id, volumes_folder)
         # Store the parquet file in the file system
-        df.to_parquet(volume_file_path, compression='snappy', index=False)
+        df.to_parquet(volume_file_path, compression="snappy", index=False)
         print(f"Volume saved successfully! Rows loaded: {len(df)} -> File: {volume_file_path}")

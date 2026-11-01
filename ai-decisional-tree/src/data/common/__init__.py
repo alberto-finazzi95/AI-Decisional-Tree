@@ -3,6 +3,13 @@ from .data_structures import DatasetType, Feature, Flag, ImageRange, ImageState,
 from .study_catalog import StudyCatalog
 
 __all__ = [
-    "BaseData", "Feature", "DatasetType", "Study", "StudyCatalog", "Flag", "ImageRange", "ImageState",
+    "BaseData",
+    "Feature",
+    "DatasetType",
+    "Study",
+    "StudyCatalog",
+    "Flag",
+    "ImageRange",
+    "ImageState",
     "ImageStateToolkit",
 ]

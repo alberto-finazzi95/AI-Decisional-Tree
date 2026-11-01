@@ -12,40 +12,36 @@ class FolderManagerBase:
         self.base_path: Path = Path(base_path)
         self._os_manager: OsManager = os_manager if os_manager is not None else OsWrapper()
 
-    def get_file_path(self, folder_name: str | ds.FolderName, file_name: str | ds.FileName, str_format: bool) -> str | Path:
+    def get_file_path(
+        self, folder_name: str | ds.FolderName, file_name: str | ds.FileName, str_format: bool
+    ) -> str | Path:
         file_path: Path = self.base_path / folder_name / file_name
         if str_format:
             return str(file_path)
         return file_path
 
     @overload
-    def file_exists(
-        self, folder_name: str | ds.FolderName, file_name: str | ds.FileName
-    ) -> bool: ...
+    def file_exists(self, folder_name: str | ds.FolderName, file_name: str | ds.FileName) -> bool: ...
 
     # Firma 2: Passi solo il Path completo
     @overload
     def file_exists(self, file_path: Path) -> bool: ...
 
-    def file_exists(
-        self, folder_or_path: any, file_name: any = None
-    ) -> bool:
+    def file_exists(self, folder_or_path: any, file_name: any = None) -> bool:
         if file_name is None:
             file_path = folder_or_path
         else:
-            file_path = self.get_file_path(
-                folder_or_path, file_name, str_format=False
-            )
+            file_path = self.get_file_path(folder_or_path, file_name, str_format=False)
 
-        return self._os_manager.exists(file_path) and self._os_manager.is_file(
-            file_path
-        )
+        return self._os_manager.exists(file_path) and self._os_manager.is_file(file_path)
 
     def folder_exists(self, folder_name: str | ds.FolderName) -> bool:
         folder_path: str | Path = self.get_folder_path(folder_name, str_format=False)
         return self._os_manager.exists(folder_path) and self._os_manager.is_dir(folder_path)
 
-    def get_file_path_if_exist(self, folder_name: str | ds.FolderName, file_name: str | ds.FileName, str_format: bool = True) -> str | Path:
+    def get_file_path_if_exist(
+        self, folder_name: str | ds.FolderName, file_name: str | ds.FileName, str_format: bool = True
+    ) -> str | Path:
         if not self.file_exists(folder_name, file_name):
             raise ex.NoFileException(folder_name, file_name)
         return self.get_file_path(folder_name, file_name, str_format=str_format)

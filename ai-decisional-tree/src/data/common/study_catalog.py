@@ -29,9 +29,7 @@ class StudyCatalog:
     @staticmethod
     def _import_subfolders(subfolders_str: str) -> tuple[str, ...]:
         """Return the subfolders for a given study."""
-        return tuple(
-            folder.strip() for folder in subfolders_str.split(",")
-        ) if subfolders_str else ()
+        return tuple(folder.strip() for folder in subfolders_str.split(",")) if subfolders_str else ()
 
     def get_subfolders(self, study_id: str) -> tuple[str, ...]:
         study: ds.Study = self.get_study(study_id)

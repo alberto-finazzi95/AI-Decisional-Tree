@@ -14,16 +14,12 @@ class DataAnalyzer(dcm.BaseData):
     MED_W: int = 3
 
     def __init__(
-            self,
-            folder_manager: cm.FolderManager,
-            config_parser: cp.ConfigParser,
-            os_manager: cm.OsManager | None = None,
+        self,
+        folder_manager: cm.FolderManager,
+        config_parser: cp.ConfigParser,
+        os_manager: cm.OsManager | None = None,
     ):
-        super().__init__(
-            folder_manager=folder_manager,
-            config_parser=config_parser,
-            os_manager=os_manager
-        )
+        super().__init__(folder_manager=folder_manager, config_parser=config_parser, os_manager=os_manager)
         self._img_filtered: np.ndarray = np.ndarray([])
 
     @property
@@ -43,5 +39,3 @@ class DataAnalyzer(dcm.BaseData):
         self._img_filtered = img_manager.img_flt_matrix
         # Store as npz file the image filtered
         img_manager.save_filter_img()
-
-

@@ -83,22 +83,22 @@ class VolumeManager:
 
     @property
     def mean_volume(self) -> np.ndarray:
-        '''
+        """
             Pre-compute the 3D statistical matrices over the entire volume for maximum speed
             A 3x3x3 uniform filter computes the local mean in a cube around each pixel
         Returns: mean volume
 
-        '''
+        """
         return self.uniform_filter(self._vol_img)
 
     @property
     def mean_sq_volume(self) -> np.ndarray:
-        return self.uniform_filter(self._vol_img ** 2)
+        return self.uniform_filter(self._vol_img**2)
 
     # Fast calculation of the local 3D standard deviation: sqrt(E[X^2] - (E[X])^2)
     @property
     def std_volume(self) -> np.ndarray:
-        return np.sqrt(np.clip(self.mean_sq_volume - self.mean_volume ** 2, 0, None))
+        return np.sqrt(np.clip(self.mean_sq_volume - self.mean_volume**2, 0, None))
 
     @property
     def num_slices(self) -> int:
@@ -148,10 +148,7 @@ class VolumeManager:
         # Precompute all 27 neighborhood offsets used by the 3x3x3 cube.
         # Each tuple represents the relative displacement in (z, y, x) coordinates.
         offsets: list[tuple[int, int, int]] = [
-            (dz, dy, dx)
-            for dz in self.WINDOW_RANGE
-            for dy in self.WINDOW_RANGE
-            for dx in self.WINDOW_RANGE
+            (dz, dy, dx) for dz in self.WINDOW_RANGE for dy in self.WINDOW_RANGE for dx in self.WINDOW_RANGE
         ]
 
         # neighborhood shape: (N_valid_voxels, 27)
@@ -196,9 +193,7 @@ def _extract_valid_voxels(
     # in the previous/next slice. This matches the original semantics while using a
     # vectorized mask for better cache locality and lower branch overhead.
     valid_mask: np.ndarray = (
-        (vol_img[1:-1, 1:-1, 1:-1] != 0)
-        | (vol_img[:-2, 1:-1, 1:-1] != 0)
-        | (vol_img[2:, 1:-1, 1:-1] != 0)
+        (vol_img[1:-1, 1:-1, 1:-1] != 0) | (vol_img[:-2, 1:-1, 1:-1] != 0) | (vol_img[2:, 1:-1, 1:-1] != 0)
     )
 
     z_valid: np.ndarray

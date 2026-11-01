@@ -79,9 +79,7 @@ class StudyCatalogTests(unittest.TestCase):
         self.assertEqual(self.catalog.get_subfolders("study-002"), ())
 
     def test_optional_columns_use_study_defaults_when_absent(self):
-        catalog = dcm.StudyCatalog(
-            pd.DataFrame([{dcm.Feature.NAME: "minimal-study"}])
-        )
+        catalog = dcm.StudyCatalog(pd.DataFrame([{dcm.Feature.NAME: "minimal-study"}]))
 
         study = catalog.get_study("minimal-study")
 

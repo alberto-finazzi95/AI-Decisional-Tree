@@ -39,10 +39,13 @@ class OsWrapperTests(unittest.TestCase):
             with patch(omf.OS_TRUSTSTORE, side_effect=lambda: events.append("truststore")) as inject:
                 self.assertEqual(self.os_wrapper.download_dataset(self.DATASET_NAME, self.OUTPUT_DIR), self.OUTPUT_DIR)
                 self.assertEqual(events, ["download", "truststore", "download"])
-                self.assertEqual(download.call_args_list, [
-                    call(self.DATASET_NAME, output_dir=self.OUTPUT_DIR),
-                    call(self.DATASET_NAME, output_dir=self.OUTPUT_DIR),
-                ])
+                self.assertEqual(
+                    download.call_args_list,
+                    [
+                        call(self.DATASET_NAME, output_dir=self.OUTPUT_DIR),
+                        call(self.DATASET_NAME, output_dir=self.OUTPUT_DIR),
+                    ],
+                )
                 inject.assert_called_once_with()
 
     def test_certificate_failure_after_retry_propagates(self):
@@ -162,7 +165,9 @@ class FolderManagerTests(unittest.TestCase):
     def test_create_folder_uses_injected_manager(self):
         self.manager.create_folder(FolderName.CONFIG)
         self.os_manager.mkdir.assert_called_once_with(
-            self.base_path / FolderName.CONFIG, parents=True, exist_ok=True,
+            self.base_path / FolderName.CONFIG,
+            parents=True,
+            exist_ok=True,
         )
 
     def test_delete_nested_folder_uses_full_paths(self):
@@ -171,10 +176,12 @@ class FolderManagerTests(unittest.TestCase):
         file_path: Path = nested / "config.ini"
         self.os_manager.exists.return_value = True
         self.os_manager.is_dir.return_value = True
-        self.os_manager.iterdir.side_effect = lambda path: iter({
-            folder: [nested],
-            nested: [file_path],
-        }[path])
+        self.os_manager.iterdir.side_effect = lambda path: iter(
+            {
+                folder: [nested],
+                nested: [file_path],
+            }[path]
+        )
         self.os_manager.is_file.side_effect = lambda path: path == file_path
 
         self.manager.delete_folder(FolderName.CONFIG)

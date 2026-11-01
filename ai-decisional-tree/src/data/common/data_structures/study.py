@@ -5,6 +5,7 @@ from pathlib import Path
 @dataclass(frozen=True)
 class Study:
     """Study metadata and its location within a dataset split."""
+
     study_id: str
     manufacturer: str
     model: str

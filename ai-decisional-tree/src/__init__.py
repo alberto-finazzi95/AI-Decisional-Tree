@@ -3,5 +3,11 @@ from .config_parser import ConfigParser
 from .data import DataManager, DatasetType, DataToolkit
 
 __all__ = [
-    "FolderManager", "ConfigParser", "DataManager", "OsManager", "OsWrapper", "DataToolkit", "DatasetType",
+    "FolderManager",
+    "ConfigParser",
+    "DataManager",
+    "OsManager",
+    "OsWrapper",
+    "DataToolkit",
+    "DatasetType",
 ]

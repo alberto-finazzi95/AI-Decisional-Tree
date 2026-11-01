@@ -12,15 +12,15 @@ import src.data.data_plotter.exceptions as ex
 
 
 class DataPlotter(dcm.BaseData):
-    TICK_LABELS: list[str] = ['0: Healthy / Background', '1: Core Ischemic', '2: Penumbra']
+    TICK_LABELS: list[str] = ["0: Healthy / Background", "1: Core Ischemic", "2: Penumbra"]
     IMG_TITLE: str = "TC Unenhanced Brain"
     MASK_TITLE: str = "Clinical Segmentation Mask (Ground Truth)"
 
     def __init__(
-            self,
-            folder_manager: cm.FolderManager,
-            config_parser: cp.ConfigParser,
-            os_manager: cm.OsManager | None = None,
+        self,
+        folder_manager: cm.FolderManager,
+        config_parser: cp.ConfigParser,
+        os_manager: cm.OsManager | None = None,
     ):
         super().__init__(folder_manager, config_parser, os_manager)
         self._frame_for_video: list = []
@@ -38,12 +38,12 @@ class DataPlotter(dcm.BaseData):
         self._clear_axes()
 
     def create_tac(
-            self,
-            img_matrix: np.ndarray,
-            mask_matrix: np.ndarray,
-            patient_id: str,
-            num_img: int,
-            img_range: dcm.ImageRange,
+        self,
+        img_matrix: np.ndarray,
+        mask_matrix: np.ndarray,
+        patient_id: str,
+        num_img: int,
+        img_range: dcm.ImageRange,
     ):
         # Closing a pyplot window unregisters its figure; create a new one if needed.
         self._close_figure_if_needed()
@@ -60,11 +60,7 @@ class DataPlotter(dcm.BaseData):
             img_range,
         )
         # Plot the mask
-        self.plot_mask(
-            1,
-            mask_matrix,
-            self.MASK_TITLE
-        )
+        self.plot_mask(1, mask_matrix, self.MASK_TITLE)
 
         self._fig.tight_layout()
         self._clear_axes()
@@ -89,29 +85,24 @@ class DataPlotter(dcm.BaseData):
         return f"ID: {patient_id}\nFrame: {num_img}"
 
     def plot_img(
-            self,
-            ax_index: int,
-            img_matrix: np.ndarray,
-            title: str,
-            img_range: dcm.ImageRange,
+        self,
+        ax_index: int,
+        img_matrix: np.ndarray,
+        title: str,
+        img_range: dcm.ImageRange,
     ):
         # Graphic 1: Native Brain CT (in grayscale, optimized for the brain)
         # We use vmin and vmax for an initial visual windowing (e.g., between 0 and 80 Hounsfield Units)
         ax: plt.Axes = self._axes[ax_index]
-        image: plt.AxesImage = ax.imshow(img_matrix, cmap='gray', vmin=img_range.lim_inf, vmax=img_range.lim_sup)
+        image: plt.AxesImage = ax.imshow(img_matrix, cmap="gray", vmin=img_range.lim_inf, vmax=img_range.lim_sup)
         ax.set_title(title)
         ax.figure.colorbar(image, ax=ax, label="Density (HU)", fraction=0.046, pad=0.04)
 
-    def plot_mask(
-            self,
-            ax_index: int,
-            mask_matrix: np.ndarray,
-            title: str
-    ):
+    def plot_mask(self, ax_index: int, mask_matrix: np.ndarray, title: str):
         ax: plt.Axes = self._axes[ax_index]
         # Graphic 2: Clinical Segmentation Mask (Ground Truth)
         # We define a discrete colormap: 0=Black (Healthy), 1=Red (Core), 2=Yellow (Penumbra)
-        colors: list[str] = ['black', 'red', 'yellow']
+        colors: list[str] = ["black", "red", "yellow"]
         cmap_mask: clr.ListedColormap = clr.ListedColormap(colors)
 
         # Setting vmin=0 and vmax=2 to map exactly the 3 classes

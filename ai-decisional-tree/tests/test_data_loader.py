@@ -49,10 +49,13 @@ class DataLoaderTests(unittest.TestCase):
         self.os_manager.download_dataset.return_value = self.dataset_path
         self.assertEqual(self.loader.load_data(), self.dataset_path)
         self.assertEqual(self.loader.load_data(), self.dataset_path)
-        self.assertEqual(self.os_manager.download_dataset.call_args_list, [
-            call("owner/dataset", self.dataset_path),
-            call("owner/dataset", self.dataset_path),
-        ])
+        self.assertEqual(
+            self.os_manager.download_dataset.call_args_list,
+            [
+                call("owner/dataset", self.dataset_path),
+                call("owner/dataset", self.dataset_path),
+            ],
+        )
 
     def test_download_failure_propagates(self):
         self.os_manager.download_dataset.side_effect = SSLError("certificate verification failed")

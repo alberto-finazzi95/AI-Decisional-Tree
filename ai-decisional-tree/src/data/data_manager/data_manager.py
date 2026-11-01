@@ -37,8 +37,8 @@ class DataManager:
     """
 
     def __init__(
-            self,
-            data_toolkit: dt.DataToolkit,
+        self,
+        data_toolkit: dt.DataToolkit,
     ):
         """
         Initialize the data manager and wire it to the required toolkit components.
@@ -52,7 +52,7 @@ class DataManager:
 
         # Initialize the base class with the provided folder manager and config parser
         self._folder_manager: cm.FolderManager = self._data_toolkit.folder_manager
-        self._config_parser:  cp.ConfigParser = self._data_toolkit.config_parser
+        self._config_parser: cp.ConfigParser = self._data_toolkit.config_parser
 
         # Initialize the DataLoader, DataPlotter and DataAnalyzer instances
         self._data_loader: dl.DataLoader = self._data_toolkit.data_loader
@@ -107,8 +107,7 @@ class DataManager:
             video=self._config_parser.save_video,
         )
         raw_img_range: dcm.ImageRange = dcm.ImageRange(
-            lim_inf=self._data_analyzer.br_w_inf,
-            lim_sup=self._data_analyzer.br_w_sup
+            lim_inf=self._data_analyzer.br_w_inf, lim_sup=self._data_analyzer.br_w_sup
         )
         raw_img_state_tlk: dcm.ImageStateToolkit = dcm.ImageStateToolkit(
             flag=raw_flag,
@@ -123,10 +122,7 @@ class DataManager:
             video=self._config_parser.save_video_flt,
         )
         # The range is normalized
-        flt_img_range: dcm.ImageRange = dcm.ImageRange(
-            lim_inf=0,
-            lim_sup=1
-        )
+        flt_img_range: dcm.ImageRange = dcm.ImageRange(lim_inf=0, lim_sup=1)
         flt_img_state_tlk: dcm.ImageStateToolkit = dcm.ImageStateToolkit(
             flag=flt_flag,
             create_tac_fn=self.create_filter_tac,
@@ -136,8 +132,7 @@ class DataManager:
         )
 
         # Storing the image state toolkit for each image state
-        self._IMG_STATE_TLK_DICT: dict[dcm.ImageState, dcm.ImageStateToolkit] = \
-        {
+        self._IMG_STATE_TLK_DICT: dict[dcm.ImageState, dcm.ImageStateToolkit] = {
             dcm.ImageState.RAW: raw_img_state_tlk,
             dcm.ImageState.FILTER: flt_img_state_tlk,
         }
