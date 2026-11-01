@@ -27,7 +27,7 @@ jobs:
 
       # Run Ruff to check for linting issues in the Python code
       - name: Ruff lint
-        run: ruff check .
+        run: ruff check . --statistics --output-format=full
 
       # Run Black in check mode to verify code formatting without modifying files
       - name: Black check
