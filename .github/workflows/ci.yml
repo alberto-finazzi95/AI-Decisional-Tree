@@ -1,0 +1,95 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint and format check
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/alberto-finazzi95/ai-decisional-tree-container:latest
+    env:
+      PYTHONPATH: ${{ github.workspace }}/ai-decisional-tree
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Ruff lint
+        run: ruff check .
+
+      - name: Black check
+        run: black --check .
+
+  tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/alberto-finazzi95/ai-decisional-tree-container:latest
+    needs: [lint]
+    env:
+      PYTHONPATH: ${{ github.workspace }}/ai-decisional-tree
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Run tests with coverage
+        run: |
+          coverage run --source=ai-decisional-tree -m unittest discover -s ai-decisional-tree/tests -p "test_*.py"
+          coverage xml -o coverage.xml
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage.xml
+          if-no-files-found: warn
+
+  sonar:
+    name: SonarQube analysis
+    needs: [lint, tests]
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/alberto-finazzi95/ai-decisional-tree-container:latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Download coverage artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: coverage-report
+          path: .
+
+      - name: SonarQube scan
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+        run: |
+          sonar-scanner \
+            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
+            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
+            -Dsonar.sources=ai-decisional-tree \
+            -Dsonar.tests=ai-decisional-tree/tests \
+            -Dsonar.python.version=3.14 \
+            -Dsonar.python.coverage.reportPaths=coverage.xml \
+            -Dsonar.exclusions='**/__pycache__/**,**/.venv/**,**/file/**,**/file_copy/**' \
+            -Dsonar.coverage.exclusions='**/tests/**' \
+            -Dsonar.host.url=${{ env.SONAR_HOST_URL }}
+
+      - name: SonarQube not configured
+        run: |
+          echo "SonarQube is disabled because SONAR_TOKEN is not configured."
+          echo "Add SONAR_TOKEN and optional SONAR_HOST_URL and SONAR_PROJECT_KEY to GitHub Secrets."

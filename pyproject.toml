@@ -1,0 +1,32 @@
+[tool.black]
+line-length = 120
+target-version = ["py314"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py314"
+exclude = [
+    ".venv",
+    "**/__pycache__",
+    "ai-decisional-tree/file/**",
+    "ai-decisional-tree/file_copy/**",
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B"]
+ignore = ["E501"]
+
+[tool.coverage.run]
+source = ["ai-decisional-tree"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/__pycache__/*",
+    "ai-decisional-tree/file/**",
+    "ai-decisional-tree/file_copy/**",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+
