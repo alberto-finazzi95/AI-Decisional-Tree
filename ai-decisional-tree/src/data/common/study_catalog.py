@@ -30,8 +30,8 @@ class StudyCatalog:
     def _import_subfolders(subfolders_str: str) -> tuple[str, ...]:
         """Return the subfolders for a given study."""
         return tuple(
-            folder.strip() for folder in subfolders_str.split(",")) \
-            if subfolders_str else ()
+            folder.strip() for folder in subfolders_str.split(",")
+        ) if subfolders_str else ()
 
     def get_subfolders(self, study_id: str) -> tuple[str, ...]:
         study: ds.Study = self.get_study(study_id)
@@ -49,8 +49,8 @@ class StudyCatalog:
         """Get one study by its unique identifier."""
         try:
             return self._studies[study_id]
-        except KeyError:
-            raise ex.StudyNotFoundError(study_id)
+        except KeyError as err:
+            raise ex.StudyNotFoundError(study_id) from err
 
     @property
     def studies(self) -> tuple[ds.Study, ...]:

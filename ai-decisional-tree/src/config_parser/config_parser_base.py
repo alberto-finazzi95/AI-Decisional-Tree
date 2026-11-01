@@ -1,5 +1,4 @@
 import configparser
-from abc import ABC
 
 import src.common as cm
 import src.config_parser.data_structures as ds
@@ -10,17 +9,18 @@ def config_error(func):
     def wrapper(self, *args, **kwargs):
         try:
             return func(self, *args, **kwargs)
-        except configparser.NoSectionError as e:
-            raise ex.NoSectionError(e.section)
-        except configparser.NoOptionError as e:
-            raise ex.NoOptionError(e.option)
-        except Exception as e:
-            raise ex.ConfigError(str(e))
+        except configparser.NoSectionError as err:
+            raise ex.NoSectionError(err.section) from err
+        except configparser.NoOptionError as err:
+            raise ex.NoOptionError(err.option) from err
+        except Exception as err:
+            raise ex.ConfigError(str(err)) from err
+
     return wrapper
 
 
-class ConfigParserBase(ABC):
-    CHAR_TO_REMOVE: str = "\""
+class ConfigParserBase:
+    CHAR_TO_REMOVE: str = '"'
 
     def __init__(self, folder_manager: cm.FolderManager, config: None | configparser.ConfigParser = None):
         self._folder_manager: cm.FolderManager = folder_manager

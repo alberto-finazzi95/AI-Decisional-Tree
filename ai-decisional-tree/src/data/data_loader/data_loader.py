@@ -23,11 +23,11 @@ class DataLoader(dcm.BaseData):
     )
 
     def __init__(
-            self,
-            folder_manager: cm.FolderManager,
-            config_parser: cp.ConfigParser,
-            csv_manager: cm.CsvManager | None = None,
-            os_manager: cm.OsManager | None = None,
+        self,
+        folder_manager: cm.FolderManager,
+        config_parser: cp.ConfigParser,
+        csv_manager: cm.CsvManager | None = None,
+        os_manager: cm.OsManager | None = None,
     ):
         super().__init__(
             folder_manager=folder_manager,
@@ -48,8 +48,8 @@ class DataLoader(dcm.BaseData):
                     self._kaggle_dataset_name,
                     self._dataset_extract_path,
                 )
-            except Exception as e:
-                print(f"Attempt {tent + 1} failed with error: {e}")
+            except Exception as err:
+                print(f"Attempt {tent + 1} failed with error: {err}")
         raise ex.DatasetLoadError(self._kaggle_dataset_name, self.TENTATIVES)
 
     def process_data(self):
@@ -69,8 +69,8 @@ class DataLoader(dcm.BaseData):
     def get_study_catalog(self, dataset_type: dcm.DatasetType) -> dcm.StudyCatalog:
         try:
             return self._study_catalogs[dataset_type]
-        except KeyError:
-            raise ex.StudyCatalogNotFound(dataset_type)
+        except KeyError as err:
+            raise ex.StudyCatalogNotFound(dataset_type) from err
 
     def _get_summary(self, dataset_type: dcm.DatasetType) -> pd.DataFrame:
         return self._summary_csv_raw[
@@ -93,14 +93,14 @@ class DataLoader(dcm.BaseData):
 
     def _get_data_path(self, data_name: str, dataset_type_folder: dcm.DatasetType) -> str:
         return self.compose_path(
-                    dataset_type_folder,
-                    data_name,
-                )
+            dataset_type_folder,
+            data_name,
+        )
 
     def _get_dataset_type_folder(self, dataset_type: dcm.DatasetType) -> str:
         return self.compose_path(
             self._dataset_folder,
-            dataset_type
+            dataset_type,
         )
 
     def _adding_subfolders_to_summary(self, dataset_type: dcm.DatasetType, dataset_name: str, file_path: str):
@@ -120,7 +120,7 @@ class DataLoader(dcm.BaseData):
         # Adding the  subfolders to the summary DataFrame
         summary_df.loc[
             summary_df[dcm.Feature.NAME] == dataset_name, dcm.Feature.SUBFOLDERS
-        ] = subfolders_str  # Store the list of subfolders in the DataFrame
+        ] = subfolders_str
 
     def _check_files(self):
         for dataset_type, summary_df in self._SUMMARIES.items():
@@ -131,9 +131,9 @@ class DataLoader(dcm.BaseData):
                 raise ex.MissingFilesError(dataset_type, missing_files)
 
     def _check_dataset_type(
-            self,
-            dataset_type: dcm.DatasetType,
-            summary_df: pd.DataFrame,
+        self,
+        dataset_type: dcm.DatasetType,
+        summary_df: pd.DataFrame,
     ) -> list:
         missing_files: list = []
         dataset_type_folder: str = self._get_dataset_type_folder(dataset_type)
@@ -161,7 +161,7 @@ class DataLoader(dcm.BaseData):
     def _get_patient_volume_path(self, patient_id: str, volumes_folder: str) -> str:
         return self.compose_path(
             volumes_folder,
-            f"vol_{patient_id}_tabular.parquet"
+            f"vol_{patient_id}_tabular.parquet",
         )
 
     def store_volume(self, df: pd.DataFrame, patient_id: str, model_phase: dcm.DatasetType):

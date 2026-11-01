@@ -1,4 +1,3 @@
-from abc import ABC
 from pathlib import Path
 from typing import overload
 
@@ -7,7 +6,8 @@ import src.common.folder_manager.exceptions as ex
 from src.common.os_manager import OsManager, OsWrapper
 
 
-class FolderManagerBase(ABC):
+class FolderManagerBase:
+
     def __init__(self, base_path: str, os_manager: OsManager | None = None):
         self.base_path: Path = Path(base_path)
         self._os_manager: OsManager = os_manager if os_manager is not None else OsWrapper()

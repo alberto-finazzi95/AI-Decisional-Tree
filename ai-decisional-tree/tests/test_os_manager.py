@@ -115,7 +115,7 @@ class OsWrapperTests(unittest.TestCase):
             with self.subTest(content=content):
                 with patch(
                     omf.OS_ZIPFILE,
-                    side_effect=lambda path: ZipFile(BytesIO(content)),
+                    side_effect=lambda path, content=content: ZipFile(BytesIO(content)),
                 ):
                     self.assertEqual(self.os_wrapper.is_valid_zip("dataset.zip"), expected)
 

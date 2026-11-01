@@ -152,8 +152,8 @@ class DataManager:
         """
         try:
             return self._IMG_STATE_TLK_DICT[self._image_state]
-        except KeyError:
-            raise ex.ImageStateToolkitNotFound(self._image_state)
+        except KeyError as err:
+            raise ex.ImageStateToolkitNotFound(self._image_state) from err
 
     @property
     def flag(self) -> dcm.Flag:

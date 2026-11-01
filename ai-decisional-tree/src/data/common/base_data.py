@@ -1,5 +1,3 @@
-from abc import ABC
-
 import numpy as np
 
 import src.common as cm
@@ -7,12 +5,12 @@ import src.config_parser as cp
 import src.image_manager.image_manager as im
 
 
-class BaseData(ABC):
+class BaseData:
     def __init__(
-            self,
-            folder_manager: cm.FolderManager,
-            config_parser: cp.ConfigParser,
-            os_manager: cm.OsManager | None = None
+        self,
+        folder_manager: cm.FolderManager,
+        config_parser: cp.ConfigParser,
+        os_manager: cm.OsManager | None = None,
     ):
         self._folder_manager: cm.FolderManager = folder_manager
         self._config_parser: cp.ConfigParser = config_parser
@@ -38,14 +36,14 @@ class BaseData(ABC):
         )
         self._dataset_folder: str = self._folder_manager.get_folder_path(
             folder_name=dataset_name,
-            str_format=True
+            str_format=True,
         )
 
     def _set_files(self):
         self._summary_csv_path: str = self._folder_manager.get_file_path(
             file_name=cm.FileName.SUMMARY_CSV,
             folder_name=self._dataset_folder,
-            str_format=True
+            str_format=True,
         )
 
     def folder_exists(self, folder_path: str) -> bool:

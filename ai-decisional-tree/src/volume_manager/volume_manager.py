@@ -105,7 +105,7 @@ class VolumeManager:
         return len(self._img_list)
 
     def build(self):
-                # Rebuild the full 3D volume from the per-slice CT images and masks.
+        # Rebuild the full 3D volume from the per-slice CT images and masks.
         # This is the compact representation used for all subsequent processing.
         self._vol_img = np.array(self._img_list)
         self._vol_msk = np.array(self._msk_list)
