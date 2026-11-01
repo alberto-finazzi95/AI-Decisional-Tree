@@ -28,11 +28,15 @@ if (-not $needsLock) {
 
 Write-Host "[hook] Dependency file changed. Refreshing lock files..."
 
-# Refresh the local environment snapshot to keep the source requirements aligned
-# with the current Python environment before generating the lock output.
-if (Test-Path "requirements.txt") {
-    Write-Host "[hook] Regenerating requirements.txt from pip freeze"
+# If the repository root does not already provide a requirements.txt file,
+# create one from the current Python environment so the default file exists.
+if (-not (Test-Path "requirements.txt")) {
+    Write-Host "[hook] requirements.txt not found in the repo root. Creating it from pip freeze."
     python -m pip freeze > requirements.txt
+    git add requirements.txt
+}
+else {
+    Write-Host "[hook] Root requirements.txt already exists. Keeping the repository default file."
 }
 
 # Generate the main hashed lock file only when the root requirements file exists.
