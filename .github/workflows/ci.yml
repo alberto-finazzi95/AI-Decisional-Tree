@@ -10,42 +10,52 @@ permissions:
   contents: read
 
 jobs:
+  # Lint job: checks code quality and formatting
   lint:
     name: Lint and format check
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/alberto-finazzi95/ai-decisional-tree-container:latest
+      options: --user root
     env:
       PYTHONPATH: ${{ github.workspace }}/ai-decisional-tree
 
     steps:
+      # Download the repository source code into the runner
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      # Run Ruff to check for linting issues in the Python code
       - name: Ruff lint
         run: ruff check .
 
+      # Run Black in check mode to verify code formatting without modifying files
       - name: Black check
         run: black --check .
 
+  # Test job: runs the unit test suite and produces a coverage report
   tests:
     name: Unit tests
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/alberto-finazzi95/ai-decisional-tree-container:latest
+      options: --user root
     needs: [lint]
     env:
       PYTHONPATH: ${{ github.workspace }}/ai-decisional-tree
 
     steps:
+      # Download the repository source code into the runner
       - name: Checkout repository
         uses: actions/checkout@v5
 
+      # Run the project test suite and generate coverage output
       - name: Run tests with coverage
         run: |
           coverage run --source=ai-decisional-tree -m unittest discover -s ai-decisional-tree/tests -p "test_*.py"
           coverage xml -o coverage.xml
 
+      # Upload the generated coverage report as a workflow artifact
       - name: Upload coverage artifact
         uses: actions/upload-artifact@v4
         with:
@@ -53,25 +63,29 @@ jobs:
           path: coverage.xml
           if-no-files-found: warn
 
+  # SonarQube job: analyzes the code quality and test coverage after lint and tests pass
   sonar:
     name: SonarQube analysis
     needs: [lint, tests]
     runs-on: ubuntu-latest
     container:
       image: ghcr.io/alberto-finazzi95/ai-decisional-tree-container:latest
-
+      options: --user root
     steps:
+      # Download the repository source code into the runner
       - name: Checkout repository
         uses: actions/checkout@v5
         with:
           fetch-depth: 0
 
+      # Download the generated coverage artifact from the previous job
       - name: Download coverage artifact
         uses: actions/download-artifact@v4
         with:
           name: coverage-report
           path: .
 
+      # Run SonarQube analysis only when the token is configured
       - name: SonarQube scan
         env:
           GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
@@ -89,6 +103,7 @@ jobs:
             -Dsonar.coverage.exclusions='**/tests/**' \
             -Dsonar.host.url=${{ env.SONAR_HOST_URL }}
 
+      # Inform the user when SonarQube is not configured in repository secrets
       - name: SonarQube not configured
         run: |
           echo "SonarQube is disabled because SONAR_TOKEN is not configured."
