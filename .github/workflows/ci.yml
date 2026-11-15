@@ -53,7 +53,7 @@ jobs:
       # Run the project test suite and generate coverage output
       - name: Run tests with coverage
         run: |
-          coverage run --source=ai-decisional-tree -m unittest discover -s ai-decisional-tree/tests -p "test_*.py"
+          coverage run --source=ai-decisional-tree ai-decisional-tree/tests/run_tests.py
           coverage xml -o coverage.xml
 
       # Upload the generated coverage report as a workflow artifact
