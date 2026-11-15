@@ -1,3 +1,6 @@
+"""
+@brief Assemble image slices into volumes and extract voxel-level records.
+"""
 import numpy as np
 import pandas as pd
 import scipy.ndimage as ndimg
@@ -8,6 +11,9 @@ import src.volume_manager.data_structures as ds
 
 class VolumeManager:
     # Window len for the uniform filter
+    """
+    @brief Assemble 3D image and mask volumes and derive voxel records.
+    """
     UNIFORM_FILTER_W: int = 3
     # Cube 3x3x3 of the pixel
     # Range for the neighborhood
@@ -15,6 +21,9 @@ class VolumeManager:
 
     def __init__(self):
         # List of tacs
+        """
+        @brief Initialize empty slice buffers, volumes, and voxel records.
+        """
         self._img_list: list[np.ndarray] = []
         self._msk_list: list[np.ndarray] = []
         # Volume
@@ -29,6 +38,9 @@ class VolumeManager:
 
     def clean(self):
         # List of tacs
+        """
+        @brief Clear stored slices, volumes, dimensions, and extracted records.
+        """
         self._img_list = []
         self._msk_list = []
         # Volume
@@ -43,24 +55,48 @@ class VolumeManager:
 
     @property
     def vol_img(self) -> np.ndarray:
+        """
+        @brief Return the assembled image volume.
+        @return: The np.ndarray produced by this operation.
+        """
         return self._vol_img
 
     @property
     def vol_msk(self) -> np.ndarray:
+        """
+        @brief Return the assembled mask volume.
+        @return: The np.ndarray produced by this operation.
+        """
         return self._vol_msk
 
     @property
     def records(self) -> pd.DataFrame:
+        """
+        @brief Return the extracted voxel records DataFrame.
+        @return: The pd.DataFrame produced by this operation.
+        """
         return self._records
 
     def add_img(self, img_matrix: np.ndarray):
+        """
+        @brief Append one image slice to the pending volume.
+        @param img_matrix: Image matrix for the operation.
+        """
         self._img_list.append(img_matrix)
 
     def add_msk(self, msk_matrix: np.ndarray):
+        """
+        @brief Append one mask slice to the pending volume.
+        @param msk_matrix: Segmentation-mask matrix to append.
+        """
         self._msk_list.append(msk_matrix)
 
     def clean_vol_img(self):
-        """Clear the entire CT image volume and release memory."""
+        """
+        @brief Clear stored image slices and the assembled image volume.
+
+        Clear the entire CT image volume and release memory.
+        """
         self._img_list.clear()
         self._vol_img = np.array([])
         # Resetting the dimensions
@@ -69,44 +105,77 @@ class VolumeManager:
         self.z = 0
 
     def clean_vol_msk(self):
-        """Clear the entire clinical mask volume."""
+        """
+        @brief Clear stored mask slices and the assembled mask volume.
+
+        Clear the entire clinical mask volume.
+        """
         self._msk_list.clear()
         self._vol_msk = np.array([])
 
     def reset_all(self):
-        """Reset the manager for a new patient."""
+        """
+        @brief Clear stored image and mask volume state.
+
+        Reset the manager for a new patient.
+        """
         self.clean_vol_img()
         self.clean_vol_msk()
 
     def uniform_filter(self, img: np.ndarray) -> np.ndarray:
+        """
+        @brief Apply the configured 3D uniform filter to an image array.
+        @param img: Image data or image-output flag, as appropriate.
+        @return: The np.ndarray produced by this operation.
+        """
         return ndimg.uniform_filter(img, size=self.UNIFORM_FILTER_W)
 
     @property
     def mean_volume(self) -> np.ndarray:
         """
+        @brief Return local mean intensities computed over the image volume.
+
+
             Pre-compute the 3D statistical matrices over the entire volume for maximum speed
             A 3x3x3 uniform filter computes the local mean in a cube around each pixel
         Returns: mean volume
 
+
+        @return: The np.ndarray produced by this operation.
         """
         return self.uniform_filter(self._vol_img)
 
     @property
     def mean_sq_volume(self) -> np.ndarray:
+        """
+        @brief Return local means of squared image intensities.
+        @return: The np.ndarray produced by this operation.
+        """
         return self.uniform_filter(self._vol_img**2)
 
     # Fast calculation of the local 3D standard deviation: sqrt(E[X^2] - (E[X])^2)
     @property
     def std_volume(self) -> np.ndarray:
+        """
+        @brief Return local standard deviations derived from local moments.
+        @return: The np.ndarray produced by this operation.
+        """
         return np.sqrt(np.clip(self.mean_sq_volume - self.mean_volume**2, 0, None))
 
     @property
     def num_slices(self) -> int:
+        """
+        @brief Return the number of image slices currently stored.
+        @return: The int produced by this operation.
+        """
         return len(self._img_list)
 
     def build(self):
         # Rebuild the full 3D volume from the per-slice CT images and masks.
         # This is the compact representation used for all subsequent processing.
+        """
+        @brief Assemble the image and mask volumes and extract voxel-level training records.
+        """
         self._vol_img = np.array(self._img_list)
         self._vol_msk = np.array(self._msk_list)
 
@@ -181,13 +250,14 @@ def _extract_valid_voxels(
     mean_vol: np.ndarray,
     std_vol: np.ndarray,
 ) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
-    """Extract valid voxels without materializing a giant temporary array.
+    """
+    @brief Extract valid voxels and their local statistics without a large temporary array.
 
-    This version is optimized for throughput:
-    - avoids the Python-level triple loop by expressing the validity condition as a
-      boolean mask and then extracting the coordinates with np.nonzero;
-    - keeps only the voxels that are not empty or adjacent along the z axis;
-    - reads the local statistics and mask labels in a single pass.
+    @param vol_img: Three-dimensional image volume.
+    @param mask: Three-dimensional segmentation mask aligned with the image volume.
+    @param mean_vol: Volume of local intensity means.
+    @param std_vol: Volume of local intensity standard deviations.
+    @return: Valid voxel coordinates, local means, standard deviations, and mask labels.
     """
     # Validity condition: keep voxels that are non-zero or have a non-zero neighbor
     # in the previous/next slice. This matches the original semantics while using a

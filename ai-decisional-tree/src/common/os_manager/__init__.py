@@ -1,3 +1,6 @@
+"""
+@brief Expose the public API of the os manager package.
+"""
 from .os_manager import OsManager
 from .os_wrapper import OsWrapper
 

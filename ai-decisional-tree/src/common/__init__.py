@@ -1,3 +1,6 @@
+"""
+@brief Expose the public API of the common package.
+"""
 from .csv_manager import CsvManager, CsvManagerWrapper
 from .data_structures import ImageFileType
 from .folder_manager import FileName, FolderManager, FolderName, NoFolderFound

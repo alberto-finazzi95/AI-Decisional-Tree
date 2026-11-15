@@ -1,3 +1,6 @@
+"""
+@brief Expose the public API of the data structures package.
+"""
 from .dataset_type import DatasetType
 from .feature import Feature
 from .image_structures import Flag, ImageRange, ImageState, ImageStateToolkit

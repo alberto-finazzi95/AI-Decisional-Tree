@@ -1,3 +1,6 @@
+"""
+@brief Expose the public API of the image structures package.
+"""
 from .flag import Flag
 from .image_range import ImageRange
 from .image_state import ImageState

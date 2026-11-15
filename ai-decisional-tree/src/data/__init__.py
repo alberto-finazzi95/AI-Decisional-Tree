@@ -1,3 +1,6 @@
+"""
+@brief Expose the public API of the data package.
+"""
 from .common import DatasetType
 from .data_analyzer import DataAnalyzer
 from .data_loader import DataLoader
