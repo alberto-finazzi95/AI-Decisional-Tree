@@ -58,7 +58,7 @@ jobs:
 
       # Upload the generated coverage report as a workflow artifact
       - name: Upload coverage artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-report
           path: coverage.xml
@@ -81,7 +81,7 @@ jobs:
 
       # Download the generated coverage artifact from the previous job
       - name: Download coverage artifact
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           name: coverage-report
           path: .
