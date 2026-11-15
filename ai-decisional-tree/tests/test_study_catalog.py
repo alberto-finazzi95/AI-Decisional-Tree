@@ -6,8 +6,13 @@ import src.data.common.exceptions as ex
 
 
 class StudyCatalogTests(unittest.TestCase):
+    """Tests conversion of summary rows into studies and lookup of their data."""
+
     def setUp(self):
+        """Creates a catalog with one complete study and one without subfolders."""
+        # Identifier used by tests for the complete study.
         self.study_id = "study-001"
+        # Each dictionary represents a summary row containing the study fields.
         self.catalog = dcm.StudyCatalog(
             pd.DataFrame(
                 [
@@ -44,8 +49,11 @@ class StudyCatalogTests(unittest.TestCase):
         )
 
     def test_get_study_returns_study_with_all_summary_fields(self):
+        """Tests that get_study converts every row field into the correct study."""
+        # Retrieve the study identified in setUp.
         study = self.catalog.get_study(self.study_id)
 
+        # Check the type and values of the clinical fields and paths.
         self.assertIsInstance(study, dcm.Study)
         self.assertEqual(study.study_id, self.study_id)
         self.assertEqual(study.manufacturer, "SIEMENS")
@@ -61,14 +69,17 @@ class StudyCatalogTests(unittest.TestCase):
         self.assertEqual(study.subfolders, ("00000", "00001"))
 
     def test_get_subfolders_returns_normalized_folder_names(self):
+        """Tests that subfolder names are returned as a tuple."""
         self.assertEqual(
             self.catalog.get_subfolders(self.study_id),
             ("00000", "00001"),
         )
 
     def test_studies_returns_all_studies_as_a_tuple(self):
+        """Tests that the studies property exposes all studies as a tuple."""
         studies = self.catalog.studies
 
+        # Check the collection type and identifier order.
         self.assertIsInstance(studies, tuple)
         self.assertEqual(
             tuple(study.study_id for study in studies),
@@ -76,13 +87,18 @@ class StudyCatalogTests(unittest.TestCase):
         )
 
     def test_empty_subfolders_are_returned_as_empty_tuple(self):
+        """Tests that the absence of subfolders produces an empty tuple."""
         self.assertEqual(self.catalog.get_subfolders("study-002"), ())
 
     def test_optional_columns_use_study_defaults_when_absent(self):
+        """Tests that missing optional columns use the default values from Study."""
+        # Create a minimal catalog with only the required identifier.
         catalog = dcm.StudyCatalog(pd.DataFrame([{dcm.Feature.NAME: "minimal-study"}]))
 
+        # Retrieve the converted row to check its default values.
         study = catalog.get_study("minimal-study")
 
+        # Missing fields must be populated with the defaults defined by the model.
         self.assertEqual(study.study_id, "minimal-study")
         self.assertEqual(study.manufacturer, "")
         self.assertEqual(study.model, "")
@@ -97,5 +113,6 @@ class StudyCatalogTests(unittest.TestCase):
         self.assertEqual(study.subfolders, ())
 
     def test_unknown_study_raises_study_not_found_error(self):
+        """Tests that looking up an unknown identifier raises the expected error."""
         with self.assertRaisesRegex(ex.StudyNotFoundError, "missing-study"):
             self.catalog.get_study("missing-study")
