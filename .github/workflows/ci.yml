@@ -89,23 +89,18 @@ jobs:
       # Run SonarQube analysis only when the token is configured
       - name: SonarQube scan
         env:
-          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
         run: |
           sonar-scanner \
-            -Dsonar.projectKey=${{ secrets.SONAR_PROJECT_KEY }} \
-            -Dsonar.organization=${{ secrets.SONAR_ORGANIZATION }} \
             -Dsonar.sources=ai-decisional-tree \
             -Dsonar.tests=ai-decisional-tree/tests \
             -Dsonar.python.version=3.14 \
             -Dsonar.python.coverage.reportPaths=coverage.xml \
             -Dsonar.exclusions='**/__pycache__/**,**/.venv/**,**/file/**,**/file_copy/**' \
-            -Dsonar.coverage.exclusions='**/tests/**' \
-            -Dsonar.host.url=${{ env.SONAR_HOST_URL }}
+            -Dsonar.coverage.exclusions='**/tests/**'
 
       # Inform the user when SonarQube is not configured in repository secrets
       - name: SonarQube not configured
         run: |
           echo "SonarQube is disabled because SONAR_TOKEN is not configured."
-          echo "Add SONAR_TOKEN and optional SONAR_HOST_URL and SONAR_PROJECT_KEY to GitHub Secrets."
+          echo "Add a valid SONAR_TOKEN to GitHub Secrets and make sure its SonarCloud account has access to the configured project and organization."
