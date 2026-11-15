@@ -8,22 +8,57 @@ if (-not $changed) {
     exit 0
 }
 
+# Prefer the repository virtual environment; otherwise use Python from PATH.
+$python = Join-Path $PSScriptRoot "..\.venv\Scripts\python.exe"
+if (-not (Test-Path $python)) {
+    $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
+    if ($pythonCommand) {
+        $python = $pythonCommand.Source
+    }
+    else {
+        Write-Host "[hook] Python was not found. Install Python or create the repository .venv."
+        exit 1
+    }
+}
+
 # Check staged Python files for lint and formatting issues before continuing.
 $pythonFiles = @($changed | Where-Object { $_ -match '\.py$' })
 
 if ($pythonFiles.Count -gt 0) {
     Write-Host "[hook] Checking staged Python files with Ruff..."
-    & ruff check --statistics --output-format=full @pythonFiles
+    & $python -m ruff check --statistics --output-format=full @pythonFiles
 
     if ($LASTEXITCODE -ne 0) {
-        Write-Host "[hook] Ruff found issues. Run 'ruff check . --fix' and stage the corrected files."
+        Write-Host "[hook] Ruff found issues. Fix them with: $python -m ruff check . --fix"
+        exit 1
+    }
+
+    Write-Host "[hook] Checking staged Python files with Black..."
+    & $python -m black --check @pythonFiles
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[hook] Black found formatting issues. Format them with: $python -m black $($pythonFiles -join ' ')"
         exit 1
     }
 }
 else {
-    Write-Host "[hook] No staged Python files. Skipping Ruff."
+    Write-Host "[hook] No staged Python files. Skipping Ruff and Black."
+}
+# Check all the repository for lint and formatting issues, even if no Python files are staged. This ensures that the repository is always in a clean state.
+Write-Host "[hook] Checking staged Python files with Ruff..."
+& $python -m  ruff check --statistics --output-format=full
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[hook] Ruff found issues. Run 'ruff check . --fix' and stage the corrected files."
+    exit 1
 }
 
+Write-Host "[hook] Checking staged Python files with Black..."
+& $python -m black --check .
+
+if ($LASTEXITCODE -ne 0) {
+    Write-Host "[hook] Black found formatting issues. Run 'black .' and stage the formatted files."
+    exit 1
+}
 # Only react when a dependency file has changed.
 # This keeps the hook lightweight and avoids regenerating lock files for unrelated edits.
 $needsLock = $false
