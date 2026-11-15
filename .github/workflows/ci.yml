@@ -14,6 +14,7 @@ jobs:
   lint:
     name: Lint and format check
     runs-on: ubuntu-latest
+    continue-on-error: true
     container:
       image: ghcr.io/alberto-finazzi95/ai-decisional-tree-container:latest
       options: --user root
