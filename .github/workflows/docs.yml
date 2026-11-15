@@ -1,0 +1,76 @@
+name: Documentation
+
+on:
+  # Allow building and deploying documentation from the Actions interface
+  workflow_dispatch:
+    inputs:
+      container_image:
+        description: Container image used to build the documentation
+        required: true
+        type: string
+  # Allow other workflows, such as ci.yml, to reuse these documentation jobs
+  workflow_call:
+    inputs:
+      container_image:
+        description: Container image used to build the documentation
+        required: true
+        type: string
+
+permissions:
+  # Grant the minimum permissions shared by the workflow jobs
+  contents: read
+
+jobs:
+  # Generate Doxygen HTML and upload it as a GitHub Pages artifact
+  build:
+    name: Build Doxygen documentation
+    runs-on: ubuntu-latest
+    container:
+      image: ${{ inputs.container_image }}
+      options: --user root
+    permissions:
+      contents: read
+      pages: read
+    steps:
+      # Fetch the repository files, including Doxyfile and documented source
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      # Initialize the GitHub Pages environment for artifact upload
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v5
+
+      # Create the configured Doxygen output directory before generation
+      - name: Create documentation output directory
+        run: mkdir -p docs/build
+
+      # Generate the HTML site using the repository's Doxyfile
+      - name: Generate HTML documentation
+        run: doxygen Doxyfile
+
+      # Make the generated site available to the deployment job
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: docs/build/html
+
+  # Publish generated documentation only for the main branch, not pull requests
+  deploy:
+    name: Deploy to GitHub Pages
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    concurrency:
+      group: github-pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      # Deploy the uploaded artifact to GitHub Pages
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

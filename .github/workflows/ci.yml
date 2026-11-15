@@ -115,3 +115,17 @@ jobs:
         run: |
           echo "SonarQube is disabled because SONAR_TOKEN is not configured."
           echo "Add a valid SONAR_TOKEN to GitHub Secrets and make sure its SonarCloud account has access to the configured project and organization."
+
+  # Build the Doxygen site and publish it to GitHub Pages after checks pass
+  docs:
+    name: Generate and publish documentation
+    needs: [lint, tests]
+    # Reuse the standalone workflow and provide the project's container image
+    uses: ./.github/workflows/docs.yml
+    with:
+      container_image: ghcr.io/alberto-finazzi95/ai-decisional-tree-container:latest
+    # Grant the reusable workflow access required to publish the Pages site
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
