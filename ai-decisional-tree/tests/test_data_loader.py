@@ -42,7 +42,7 @@ class DataLoaderTests(unittest.TestCase):
             folder_manager=self.folder_manager,
             config_parser=self.config_parser,
             csv_manager=self.csv_manager,
-            os_manager=self.os_manager
+            os_manager=self.os_manager,
         )
         # Exclude setup calls from the call count.
         self.os_manager.reset_mock()

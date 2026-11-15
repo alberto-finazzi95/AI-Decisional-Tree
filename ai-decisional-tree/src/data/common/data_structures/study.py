@@ -1,6 +1,7 @@
 """
 @brief Represent immutable metadata and paths for a dataset study.
 """
+
 from dataclasses import dataclass
 from pathlib import Path
 

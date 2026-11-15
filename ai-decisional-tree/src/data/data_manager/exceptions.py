@@ -7,6 +7,7 @@ class ImageStateToolkitNotFound(KeyError):
     """
     @brief Raised when no toolkit is configured for an image state.
     """
+
     def __init__(self, state: str):
         """
         @brief Create an error identifying the image state without a toolkit.

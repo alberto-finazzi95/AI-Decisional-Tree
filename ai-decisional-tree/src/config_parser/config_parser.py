@@ -1,6 +1,7 @@
 """
 @brief Expose typed access to application configuration settings.
 """
+
 import src.common as cm
 import src.config_parser.config_parser_base as cpb
 import src.config_parser.data_structures as ds
@@ -10,6 +11,7 @@ class ConfigParser(cpb.ConfigParserBase):
     """
     @brief Expose dataset and storage settings from the configuration file.
     """
+
     def __init__(self, folder_manager: cm.FolderManager):
         """
         @brief Load configuration settings from the file resolved by the folder manager.

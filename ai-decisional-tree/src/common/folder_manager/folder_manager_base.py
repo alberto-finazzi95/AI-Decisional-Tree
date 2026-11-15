@@ -1,6 +1,7 @@
 """
 @brief Provide filesystem path composition and folder/file operations.
 """
+
 from pathlib import Path
 from typing import overload
 
@@ -10,10 +11,10 @@ from src.common.os_manager import OsManager, OsWrapper
 
 
 class FolderManagerBase:
-
     """
     @brief Compose filesystem paths and perform file and directory operations.
     """
+
     def __init__(self, base_path: str, os_manager: OsManager | None = None):
         """
         @brief Initialize path operations with a base directory and filesystem helper.

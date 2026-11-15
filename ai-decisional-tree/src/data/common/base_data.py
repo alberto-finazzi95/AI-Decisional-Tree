@@ -1,6 +1,7 @@
 """
 @brief Provide shared filesystem and image-loading support for data components.
 """
+
 import numpy as np
 
 import src.common as cm
@@ -12,6 +13,7 @@ class BaseData:
     """
     @brief Shared paths, image-manager caching, and matrix loading for data components.
     """
+
     def __init__(
         self,
         folder_manager: cm.FolderManager,

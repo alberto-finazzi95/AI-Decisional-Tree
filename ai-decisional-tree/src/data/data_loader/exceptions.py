@@ -1,6 +1,7 @@
 """
 @brief Define errors raised during dataset download and validation.
 """
+
 import src.data.common as dcm
 
 
@@ -8,6 +9,7 @@ class DatasetLoadError(RuntimeError):
     """
     @brief Raised when dataset download attempts are exhausted.
     """
+
     def __init__(self, dataset_name: str, tentatives: int):
         """
         @brief Create an error identifying a dataset download that exhausted its attempts.
@@ -21,6 +23,7 @@ class MissingFilesError(FileNotFoundError):
     """
     @brief Raised when expected dataset files are missing.
     """
+
     def __init__(self, dataset_type: dcm.DatasetType, missing_files: list):
         """
         @brief Create an error listing files missing from a dataset split.
@@ -34,6 +37,7 @@ class StudyCatalogNotFound(KeyError):
     """
     @brief Raised when a study catalog for a split is unavailable.
     """
+
     def __init__(self, dataset_type: dcm.DatasetType):
         """
         @brief Create an error identifying the split without a study catalog.

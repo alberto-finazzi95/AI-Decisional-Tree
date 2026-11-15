@@ -1,6 +1,7 @@
 """
 @brief Read configuration values and translate parsing errors.
 """
+
 import configparser
 
 import src.common as cm
@@ -14,6 +15,7 @@ def config_error(func):
     @param func: Configuration accessor wrapped to translate errors.
     @return: The value produced by this operation.
     """
+
     def wrapper(self, *args, **kwargs):
         """
         @brief Perform the wrapper operation.
@@ -40,6 +42,7 @@ class ConfigParserBase:
     """
     @brief Load configuration and provide typed value accessors.
     """
+
     CHAR_TO_REMOVE: str = '"'
 
     def __init__(self, folder_manager: cm.FolderManager, config: None | configparser.ConfigParser = None):

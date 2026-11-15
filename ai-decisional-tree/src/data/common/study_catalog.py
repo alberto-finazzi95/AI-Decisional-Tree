@@ -1,6 +1,7 @@
 """
 @brief Build and query study metadata from a dataset summary table.
 """
+
 import pandas as pd
 
 import src.data.common.data_structures as ds

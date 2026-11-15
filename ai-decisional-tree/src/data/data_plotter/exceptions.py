@@ -7,6 +7,7 @@ class NotEnoughPngFiles(Exception):
     """
     @brief Raised when collected PNG frames do not match the expected count.
     """
+
     def __init__(self, patient_id: str, num_frame_read: int, num_frame_expected: int):
         """
         @brief Create an error describing the actual and expected video frame counts.

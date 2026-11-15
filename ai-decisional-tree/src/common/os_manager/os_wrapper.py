@@ -1,6 +1,7 @@
 """
 @brief Implement operating-system operations using pathlib and dataset download support.
 """
+
 import os
 from collections.abc import Iterator
 from pathlib import Path
@@ -16,6 +17,7 @@ class OsWrapper(osm.OsManager):
     """
     @brief Implement filesystem and dataset-download operations using standard libraries.
     """
+
     def download_dataset(self, dataset_name: str, output_dir: str) -> str:
         """
         @brief Download the named dataset into the requested output directory.

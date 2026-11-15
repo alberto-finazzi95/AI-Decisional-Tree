@@ -1,6 +1,7 @@
 """
 @brief Load image and mask matrices and apply image filtering.
 """
+
 from pathlib import Path
 
 import numpy as np
@@ -13,6 +14,7 @@ class ImageManager:
     """
     @brief Load and process image and segmentation-mask matrices for one patient.
     """
+
     def __init__(self, patient_path: str, folder_manager: cm.FolderManager):
         """
         @brief Load the raw image and segmentation mask for one patient directory.

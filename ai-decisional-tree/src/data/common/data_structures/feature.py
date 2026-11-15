@@ -1,6 +1,7 @@
 """
 @brief Define column names used in dataset summary tables.
 """
+
 from enum import StrEnum
 
 

@@ -7,6 +7,7 @@ class StudyNotFoundError(KeyError):
     """
     @brief Raised when a study identifier is absent from the catalog.
     """
+
     def __init__(self, study_id: str):
         """
         @brief Create a lookup error identifying the missing study.
@@ -19,6 +20,7 @@ class IndexNotFoundError(IndexError):
     """
     @brief Raised when a study subfolder index is out of range.
     """
+
     def __init__(self, subfolder_index: int, study_id: str):
         """
         @brief Create an index error identifying the study and invalid subfolder index.

@@ -1,6 +1,7 @@
 """
 @brief Apply configured image windowing and filtering to study frames.
 """
+
 import numpy as np
 
 import src.common as cm

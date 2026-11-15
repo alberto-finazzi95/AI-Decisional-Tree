@@ -1,6 +1,7 @@
 """
 @brief Create and save image/mask TAC plots and patient videos.
 """
+
 import imageio as iio
 import imageio.v3 as iio3
 import matplotlib.colors as clr
@@ -18,6 +19,7 @@ class DataPlotter(dcm.BaseData):
     """
     @brief Render image/mask TACs and save PNG and video outputs.
     """
+
     TICK_LABELS: list[str] = ["0: Healthy / Background", "1: Core Ischemic", "2: Penumbra"]
     IMG_TITLE: str = "TC Unenhanced Brain"
     MASK_TITLE: str = "Clinical Segmentation Mask (Ground Truth)"

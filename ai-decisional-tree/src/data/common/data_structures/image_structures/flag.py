@@ -1,6 +1,7 @@
 """
 @brief Represent configuration flags for image and video output.
 """
+
 from dataclasses import dataclass
 
 
@@ -9,6 +10,7 @@ class Flag:
     """
     @brief Boolean settings controlling image and video output.
     """
+
     img: bool
     video: bool
 

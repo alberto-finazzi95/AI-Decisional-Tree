@@ -1,6 +1,7 @@
 """
 @brief Define the operating-system operations used by the application.
 """
+
 from abc import ABC, abstractmethod
 from collections.abc import Iterator
 from pathlib import Path
@@ -10,6 +11,7 @@ class OsManager(ABC):
     """
     @brief Interface for filesystem and dataset-download operations.
     """
+
     @abstractmethod
     def download_dataset(self, dataset_name: str, output_dir: str) -> str:
         """

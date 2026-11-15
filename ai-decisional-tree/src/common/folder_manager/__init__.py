@@ -1,6 +1,7 @@
 """
 @brief Expose the public API of the folder manager package.
 """
+
 from .data_structures import FileName, FolderName
 from .exceptions import NoFolderFound
 from .folder_manager import FolderManager

@@ -1,6 +1,7 @@
 """
 @brief Define names for voxel features and neighborhood columns.
 """
+
 from enum import StrEnum
 
 
@@ -19,6 +20,7 @@ class ParamEnum(StrEnum):
     """
     @brief Names of metadata, statistics, and target columns in voxel records.
     """
+
     META_NORM = "metadata_z_norm"
     STAT_MEAN_3D = "stat_local_mean_3d"
     STAT_MEAN_STD = "stat_local_std_3d"

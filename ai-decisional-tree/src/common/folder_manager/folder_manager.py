@@ -1,6 +1,7 @@
 """
 @brief Provide application-specific folder paths on top of FolderManagerBase.
 """
+
 from pathlib import Path
 
 import src.common.folder_manager.data_structures as ds
@@ -12,6 +13,7 @@ class FolderManager(fmb.FolderManagerBase):
     """
     @brief Resolve application directories and the configuration file.
     """
+
     def __init__(self, base_path: str, os_manager: osm.OsManager | None = None):
         """
         @brief Initialize path operations relative to the application base directory.

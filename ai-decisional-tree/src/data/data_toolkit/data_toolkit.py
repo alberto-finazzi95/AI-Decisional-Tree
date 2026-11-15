@@ -1,6 +1,7 @@
 """
 @brief Construct and expose the configured data-processing components.
 """
+
 import src.common as cm
 import src.config_parser as cp
 import src.data.data_analyzer as da
@@ -12,6 +13,7 @@ class DataToolkit:
     """
     @brief Create and expose data loading, plotting, and analysis components.
     """
+
     def __init__(
         self,
         os_manager: cm.OsManager,
