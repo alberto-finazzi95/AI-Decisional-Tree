@@ -3,9 +3,8 @@ import unittest
 from pathlib import Path
 from unittest.mock import call, patch
 
-from requests.exceptions import HTTPError, SSLError
-
 import src as src
+from requests.exceptions import HTTPError, SSLError
 from tests.helper import OsMockFolder as omf
 
 

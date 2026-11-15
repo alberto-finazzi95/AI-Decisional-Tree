@@ -8,6 +8,22 @@ if (-not $changed) {
     exit 0
 }
 
+# Check staged Python files for lint and formatting issues before continuing.
+$pythonFiles = @($changed | Where-Object { $_ -match '\.py$' })
+
+if ($pythonFiles.Count -gt 0) {
+    Write-Host "[hook] Checking staged Python files with Ruff..."
+    & ruff check --statistics --output-format=full @pythonFiles
+
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host "[hook] Ruff found issues. Run 'ruff check . --fix' and stage the corrected files."
+        exit 1
+    }
+}
+else {
+    Write-Host "[hook] No staged Python files. Skipping Ruff."
+}
+
 # Only react when a dependency file has changed.
 # This keeps the hook lightweight and avoids regenerating lock files for unrelated edits.
 $needsLock = $false

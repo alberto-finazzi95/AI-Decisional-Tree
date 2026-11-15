@@ -1,6 +1,8 @@
 """
 @brief Define errors raised when study metadata cannot be resolved.
 """
+
+
 class StudyNotFoundError(KeyError):
     """
     @brief Raised when a study identifier is absent from the catalog.

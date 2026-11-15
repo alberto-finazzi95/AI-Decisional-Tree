@@ -26,7 +26,7 @@ class DataLoader(dcm.BaseData):
     """
     SUB_FOLDER_PREFIX: str = "00"
     TENTATIVES: int = 4
-    DATASET_TYPES: tuple[dcm.DatasetType,...] = (
+    DATASET_TYPES: tuple[dcm.DatasetType, ...] = (
         dcm.DatasetType.TRAIN,
         dcm.DatasetType.VALIDATION,
         dcm.DatasetType.TEST,

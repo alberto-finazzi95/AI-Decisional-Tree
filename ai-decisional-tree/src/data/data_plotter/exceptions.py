@@ -1,6 +1,8 @@
 """
 @brief Define errors raised when a requested video lacks expected frames.
 """
+
+
 class NotEnoughPngFiles(Exception):
     """
     @brief Raised when collected PNG frames do not match the expected count.

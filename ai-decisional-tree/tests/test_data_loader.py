@@ -1,12 +1,11 @@
 import unittest
 from unittest.mock import Mock, call
 
-from requests.exceptions import SSLError
-
 import src.common as src
 import src.config_parser as cp
 import src.data.data_loader as dl
 import src.data.data_loader.exceptions as ex
+from requests.exceptions import SSLError
 
 
 class DataLoaderTests(unittest.TestCase):

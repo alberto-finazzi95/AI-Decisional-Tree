@@ -1,6 +1,8 @@
 """
 @brief Define errors raised when image-state configuration is unavailable.
 """
+
+
 class ImageStateToolkitNotFound(KeyError):
     """
     @brief Raised when no toolkit is configured for an image state.

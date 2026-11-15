@@ -1,12 +1,11 @@
 import unittest
 from pathlib import Path
-from unittest.mock import Mock, patch, call
+from unittest.mock import Mock, call, patch
 
 import src as src
 from src.common.folder_manager import FolderManager
 from src.common.folder_manager.data_structures import FileName, FolderName
 from tests.helper import OsMockFolder as omf
-
 
 
 class FolderManagerTests(unittest.TestCase):
