@@ -135,3 +135,36 @@ jobs:
       contents: read
       pages: write
       id-token: write
+
+  # Review pull requests with PR-Agent without exposing the Gemini key to forks
+  pr-agent:
+    name: AI pull request review
+    if: >-
+      github.event_name == 'pull_request' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      issues: write
+      pull-requests: write
+    env:
+      PR_AGENT_ENABLED: ${{ secrets.GEMINI_API_KEY != '' }}
+    steps:
+      # Run an automatic review when a same-repository pull request is opened or updated
+      - name: Review pull request with PR-Agent
+        if: env.PR_AGENT_ENABLED == 'true'
+        uses: docker://pragent/pr-agent:0.50.0-github_action
+        env:
+          GITHUB_TOKEN: ${{ secrets.REPO_TOKEN }}
+          GOOGLE_AI_STUDIO.GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          config.model: gemini/gemini-3.8-flash
+          config.fallback_models: '[]'
+          github_action_config.auto_review: 'true'
+          github_action_config.auto_describe: 'false'
+          github_action_config.auto_improve: 'false'
+          github_action_config.pr_actions: '["opened", "reopened", "ready_for_review", "synchronize"]'
+
+      # Explain why the review did not run until the Gemini API key is configured
+      - name: Report missing Gemini API key
+        if: env.PR_AGENT_ENABLED != 'true'
+        run: echo "::notice::PR-Agent skipped. Add GEMINI_API_KEY to repository Actions secrets to enable AI reviews."
