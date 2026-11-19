@@ -5,6 +5,7 @@ from unittest.mock import call, patch
 
 import src as src
 from requests.exceptions import HTTPError, SSLError
+
 from tests.helper import OsMockFolder as omf
 
 
@@ -13,6 +14,13 @@ class OsWrapperTests(unittest.TestCase):
 
     DATASET_NAME: str = "owner/dataset"
     OUTPUT_DIR: str = "extracted"
+    CONFIG_DIR: str = "config"
+    CONFIG_FILE: str = "config.ini"
+    DOWNLOAD_EVENT: str = "download"
+    TRUSTSTORE_EVENT: str = "truststore"
+    READ_PATH_METHODS: tuple[str, ...] = ("exists", "is_file", "is_dir", "iterdir")
+    MUTATING_PATH_METHODS: tuple[str, ...] = ("unlink", "rmdir")
+    PATH_METHODS: tuple[str, ...] = READ_PATH_METHODS + MUTATING_PATH_METHODS
 
     def setUp(self) -> None:
         """Creates the concrete wrapper implementation under test."""
@@ -36,17 +44,20 @@ class OsWrapperTests(unittest.TestCase):
 
         def download_dataset(*args, **kwargs):
             """Fails on the first download and returns the folder on the second."""
-            events.append("download")
+            events.append(self.DOWNLOAD_EVENT)
             if len(events) == 1:
                 raise SSLError("[SSL: CERTIFICATE_VERIFY_FAILED] unable to get local issuer certificate")
             return self.OUTPUT_DIR
 
         # Replace the download and trust store with test-controlled functions.
         with patch(omf.OS_DATASET_DOWNLOAD, side_effect=download_dataset) as download:
-            with patch(omf.OS_TRUSTSTORE, side_effect=lambda: events.append("truststore")) as inject:
+            with patch(omf.OS_TRUSTSTORE, side_effect=lambda: events.append(self.TRUSTSTORE_EVENT)) as inject:
                 # Check the result and order: download, trust store, then another download.
                 self.assertEqual(self.os_wrapper.download_dataset(self.DATASET_NAME, self.OUTPUT_DIR), self.OUTPUT_DIR)
-                self.assertEqual(events, ["download", "truststore", "download"])
+                self.assertEqual(
+                    events,
+                    [self.DOWNLOAD_EVENT, self.TRUSTSTORE_EVENT, self.DOWNLOAD_EVENT],
+                )
                 self.assertEqual(
                     download.call_args_list,
                     [
@@ -90,22 +101,22 @@ class OsWrapperTests(unittest.TestCase):
         """Tests that dirname returns the result from the os library."""
         # Compare the wrapper result with the standard library result.
         wrapper: src.OsWrapper = src.OsWrapper()
-        path: str = os.path.join("config", "config.ini")
+        path: str = os.path.join(self.CONFIG_DIR, self.CONFIG_FILE)
         self.assertEqual(wrapper.dirname(path), os.path.dirname(path))
 
     def test_path_operations_delegate(self):
         """Tests that path operations are delegated to Path objects."""
         # Use both strings and Path objects and check each supported operation.
         wrapper: src.OsWrapper = src.OsWrapper()
-        for path in ("config", Path("config")):
-            for method in ("exists", "is_file", "is_dir", "iterdir", "unlink", "rmdir"):
+        for path in (self.CONFIG_DIR, Path(self.CONFIG_DIR)):
+            for method in self.PATH_METHODS:
                 with self.subTest(path=path, method=method):
                     with patch(omf.OS_PATH) as path_class:
                         path_mock = path_class.return_value
                         result = getattr(wrapper, method)(path)
                         path_class.assert_called_once_with(path)
                         getattr(path_mock, method).assert_called_once_with()
-                        if method in ("exists", "is_file", "is_dir", "iterdir"):
+                        if method in self.READ_PATH_METHODS:
                             # Filesystem read methods return the value from Path.
                             self.assertIs(result, getattr(path_mock, method).return_value)
                         else:
@@ -115,8 +126,8 @@ class OsWrapperTests(unittest.TestCase):
     def test_mkdir_delegates_options(self):
         """Tests that mkdir passes the path and options to the Path library."""
         with patch(omf.OS_PATH) as path_class:
-            self.os_wrapper.mkdir("config", parents=True, exist_ok=True)
-            path_class.assert_called_once_with("config")
+            self.os_wrapper.mkdir(self.CONFIG_DIR, parents=True, exist_ok=True)
+            path_class.assert_called_once_with(self.CONFIG_DIR)
             path_class.return_value.mkdir.assert_called_once_with(parents=True, exist_ok=True)
 
     def test_filesystem_errors_propagate(self):
@@ -125,4 +136,4 @@ class OsWrapperTests(unittest.TestCase):
         with patch(omf.OS_PATH) as path_class:
             path_class.return_value.unlink.side_effect = PermissionError("denied")
             with self.assertRaises(PermissionError):
-                self.os_wrapper.unlink("config.ini")
+                self.os_wrapper.unlink(self.CONFIG_FILE)

@@ -22,7 +22,7 @@ if (-not (Test-Path $python)) {
 }
 
 # Check staged Python files for lint and formatting issues before continuing.
-$pythonFiles = @($changed | Where-Object { $_ -match '\.py$' })
+$pythonFiles = @($changed | Where-Object { ($_ -match '\.py$') -and (Test-Path $_ -PathType Leaf) })
 
 if ($pythonFiles.Count -gt 0) {
     Write-Host "[hook] Checking staged Python files with Ruff..."

@@ -5,26 +5,29 @@ from unittest.mock import Mock, call, patch
 import src as src
 from src.common.folder_manager import FolderManager
 from src.common.folder_manager.data_structures import FileName, FolderName
+
 from tests.helper import OsMockFolder as omf
 
 
 class FolderManagerTests(unittest.TestCase):
     """Tests that FolderManager builds paths and delegates OS operations."""
 
+    BASE_PATH: str = "application"
+
     def setUp(self):
         """Creates a folder manager connected to a mocked operating system manager."""
         # The mock allows operations to be checked without modifying the disk.
         self.os_manager: Mock = Mock(spec_set=src.OsManager)
-        self.base_path: Path = Path("application")
+        self.base_path: Path = Path(self.BASE_PATH)
         self.manager = FolderManager(str(self.base_path), self.os_manager)
 
     def test_default_wrapper_preserves_existing_constructor(self):
         """Tests that the constructor still uses the default wrapper when none is provided."""
         # Replace the real wrapper and check which folder the manager inspects.
         with patch(omf.OS_WRAPPER) as wrapper:
-            manager: FolderManager = FolderManager("application")
+            manager: FolderManager = FolderManager(self.BASE_PATH)
             manager.folder_exists(FolderName.CONFIG)
-            wrapper.return_value.exists.assert_called_once_with(Path("application") / "config")
+            wrapper.return_value.exists.assert_called_once_with(Path(self.BASE_PATH) / FolderName.CONFIG)
 
     def test_file_exists_uses_injected_manager(self):
         """Tests that file checks use the injected manager and the full path."""
