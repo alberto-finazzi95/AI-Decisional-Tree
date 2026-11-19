@@ -1,4 +1,7 @@
-"""Enumeration of the canonical file names used for image-related artifacts.
+"""
+@brief Expose the public API of the image file package.
+
+Enumeration of the canonical file names used for image-related artifacts.
 
 This module centralizes the disk names of the main image files managed by the
 project so that callers can reference them consistently instead of hard-coding
@@ -8,16 +11,21 @@ The values correspond to the compressed NumPy archives used to persist:
 - the original image matrix,
 - the segmentation mask,
 - the filtered image output.
+
 """
 
 from enum import StrEnum
 
 
 class ImageFileType(StrEnum):
-    """Canonical file types for image and mask artifacts.
+    """
+    @brief Canonical archive file names for image and mask matrices.
+
+    Canonical file types for image and mask artifacts.
 
     Each enum member represents a file name used by the imaging pipeline when
     reading or writing compressed arrays from disk.
+
     """
 
     IMG = "image.npz"

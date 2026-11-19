@@ -1,8 +1,16 @@
+"""
+@brief Define column names used in dataset summary tables.
+"""
+
 from enum import StrEnum
 
 
 class Feature(StrEnum):
-    """Enum class for feature names used in the dataset."""
+    """
+    @brief Dataset summary column names.
+
+    Enum class for feature names used in the dataset.
+    """
 
     # Define feature names as enum members
     NAME = "name"

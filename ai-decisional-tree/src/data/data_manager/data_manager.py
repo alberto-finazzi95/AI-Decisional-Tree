@@ -1,3 +1,7 @@
+"""
+@brief Coordinate dataset access, TAC creation, image export, and volume export.
+"""
+
 from typing import Any
 
 import pandas as pd
@@ -5,16 +9,19 @@ import pandas as pd
 import src.common as cm
 import src.config_parser as cp
 import src.data.common as dcm
-import src.data.data_loader as dl
-import src.data.data_plotter as dp
 import src.data.data_analyzer as da
-import src.data.data_toolkit as dt
+import src.data.data_loader as dl
 import src.data.data_manager.exceptions as ex
+import src.data.data_plotter as dp
+import src.data.data_toolkit as dt
 import src.volume_manager as vm
 
 
 class DataManager:
     """
+    @brief Coordinate dataset loading, TAC generation, plotting, and volume export.
+
+
     Manager responsible for orchestrating dataset loading, TAC creation, plotting,
     and export operations for both raw and filtered image states.
 
@@ -34,25 +41,31 @@ class DataManager:
         _data_analyzer (DataAnalyzer): Analyzer used for filtering/processing data.
         _state (DatasetType): Current dataset subset (e.g., train/val/test).
         _image_state (ImageState): Current image-processing mode (raw or filtered).
+
     """
 
     def __init__(
-            self,
-            data_toolkit: dt.DataToolkit,
+        self,
+        data_toolkit: dt.DataToolkit,
     ):
         """
+        @brief Connect the toolkit components, load the dataset, and select initial states.
+
+
         Initialize the data manager and wire it to the required toolkit components.
 
         Args:
             data_toolkit (DataToolkit): Preconfigured toolkit instance exposing
                 the folder manager, config parser, loader, plotter, and analyzer.
+
+        @param data_toolkit: Configured toolkit supplying data-processing components.
         """
         # Store in a variable data toolkit
         self._data_toolkit: dt.DataToolkit = data_toolkit
 
         # Initialize the base class with the provided folder manager and config parser
         self._folder_manager: cm.FolderManager = self._data_toolkit.folder_manager
-        self._config_parser:  cp.ConfigParser = self._data_toolkit.config_parser
+        self._config_parser: cp.ConfigParser = self._data_toolkit.config_parser
 
         # Initialize the DataLoader, DataPlotter and DataAnalyzer instances
         self._data_loader: dl.DataLoader = self._data_toolkit.data_loader
@@ -77,21 +90,33 @@ class DataManager:
 
     @property
     def state(self) -> dcm.DatasetType:
-        """Return the currently selected dataset split."""
+        """
+        @brief Get or select the active dataset split.
+
+        Return the currently selected dataset split.
+        @return: The dcm.DatasetType produced by this operation.
+        """
         return self._state
 
     @state.setter
     def state(self, value: dcm.DatasetType):
         """
+        @brief Get or select the active dataset split.
+
+
         Set the active dataset split.
 
         Args:
             value (DatasetType): Dataset type such as TRAIN, VAL, or TEST.
+
+        @param value: Dataset split to activate.
         """
         self._state = value
 
     def _set_flags(self):
         """
+        @brief Configure callbacks, output flags, and intensity ranges for each image state.
+
         Build the per-image-state toolkit configuration for raw and filtered data.
 
         Each image state stores:
@@ -107,8 +132,7 @@ class DataManager:
             video=self._config_parser.save_video,
         )
         raw_img_range: dcm.ImageRange = dcm.ImageRange(
-            lim_inf=self._data_analyzer.br_w_inf,
-            lim_sup=self._data_analyzer.br_w_sup
+            lim_inf=self._data_analyzer.br_w_inf, lim_sup=self._data_analyzer.br_w_sup
         )
         raw_img_state_tlk: dcm.ImageStateToolkit = dcm.ImageStateToolkit(
             flag=raw_flag,
@@ -123,10 +147,7 @@ class DataManager:
             video=self._config_parser.save_video_flt,
         )
         # The range is normalized
-        flt_img_range: dcm.ImageRange = dcm.ImageRange(
-            lim_inf=0,
-            lim_sup=1
-        )
+        flt_img_range: dcm.ImageRange = dcm.ImageRange(lim_inf=0, lim_sup=1)
         flt_img_state_tlk: dcm.ImageStateToolkit = dcm.ImageStateToolkit(
             flag=flt_flag,
             create_tac_fn=self.create_filter_tac,
@@ -136,8 +157,7 @@ class DataManager:
         )
 
         # Storing the image state toolkit for each image state
-        self._IMG_STATE_TLK_DICT: dict[dcm.ImageState, dcm.ImageStateToolkit] = \
-        {
+        self._IMG_STATE_TLK_DICT: dict[dcm.ImageState, dcm.ImageStateToolkit] = {
             dcm.ImageState.RAW: raw_img_state_tlk,
             dcm.ImageState.FILTER: flt_img_state_tlk,
         }
@@ -145,47 +165,83 @@ class DataManager:
     @property
     def image_state_toolkit(self) -> dcm.ImageStateToolkit:
         """
+        @brief Return callbacks and settings for the active image state.
+
+
         Return the toolkit configuration associated with the current image state.
 
         Raises:
             ImageStateToolkitNotFound: If no toolkit is defined for the active state.
+
+        @return: The dcm.ImageStateToolkit produced by this operation.
+        @throws ImageStateToolkitNotFound: If the operation encounters this error.
         """
         try:
             return self._IMG_STATE_TLK_DICT[self._image_state]
-        except KeyError:
-            raise ex.ImageStateToolkitNotFound(self._image_state)
+        except KeyError as err:
+            raise ex.ImageStateToolkitNotFound(self._image_state) from err
 
     @property
     def flag(self) -> dcm.Flag:
-        """Return the active output configuration for the current image state."""
+        """
+        @brief Return output flags for the active image state.
+
+        Return the active output configuration for the current image state.
+        @return: The dcm.Flag produced by this operation.
+        """
         return self.image_state_toolkit.flag
 
     @property
     def img_range(self) -> dcm.ImageRange:
-        """Return the valid intensity window for the active image state."""
+        """
+        @brief Return display intensity bounds for the active image state.
+
+        Return the valid intensity window for the active image state.
+        @return: The dcm.ImageRange produced by this operation.
+        """
         return self.image_state_toolkit.img_range
 
     @property
     def create_tac_fn(self) -> Any:
-        """Return the callback used to create a TAC for the active image state."""
+        """
+        @brief Return the TAC creation callback for the active image state.
+
+        Return the callback used to create a TAC for the active image state.
+        @return: The Any produced by this operation.
+        """
         return self.image_state_toolkit.create_tac_fn
 
     @property
     def store_tac_png_fn(self) -> Any:
-        """Return the callback used to save a TAC image for the active state."""
+        """
+        @brief Return the PNG-saving callback for the active image state.
+
+        Return the callback used to save a TAC image for the active state.
+        @return: The Any produced by this operation.
+        """
         return self.image_state_toolkit.store_tac_png_fn
 
     @property
     def store_tac_video_fn(self) -> Any:
-        """Return the callback used to export a TAC video for the active state."""
+        """
+        @brief Return the video-saving callback for the active image state.
+
+        Return the callback used to export a TAC video for the active state.
+        @return: The Any produced by this operation.
+        """
         return self.image_state_toolkit.store_tac_video_fn
 
     def check_flag(self) -> bool:
         """
+        @brief Return whether both image and video outputs are disabled.
+
+
         Verify whether all media outputs are disabled by configuration.
 
         Returns:
             bool: True if image and video generation are both disabled; otherwise False.
+
+        @return: The bool produced by this operation.
         """
         if self.flag.all_media_disabled():
             print(f"[{self._state}] Don't create any images or videos as configuration settings.")
@@ -194,6 +250,8 @@ class DataManager:
 
     def _create_tacs_for_state(self, image_state: dcm.ImageState):
         """
+        @brief Generate and export TAC outputs for all studies in the selected image state.
+
         Generate all TACs for a given image-processing state.
 
         This method sets the active image state, checks the output flags, iterates
@@ -202,6 +260,8 @@ class DataManager:
 
         Args:
             image_state (ImageState): Target state, such as RAW or FILTER.
+
+        @param image_state: Image-processing state to activate.
         """
         self._image_state = image_state
         print(f"Image state is: {self._image_state.name}")
@@ -228,6 +288,9 @@ class DataManager:
 
     def create_volume_tacs(self):
         # Looping in each single study
+        """
+        @brief Build and save volume records for every study in the active split.
+        """
         for single_study in self.all_studies:
             study_id: str = single_study.study_id
             num_frame: int = single_study.num_subfolders
@@ -239,6 +302,11 @@ class DataManager:
             self.store_volume_tac(study_id)
 
     def concatenate_tac(self, patient_id: str, num_img: int):
+        """
+        @brief Append one study frame's image and mask matrices to the pending volume.
+        @param patient_id: Study identifier.
+        @param num_img: Frame index within the study.
+        """
         patient_img_path: str = self.get_patient_img_path(patient_id, num_img)
         # Load the matrices
         img_matrix, mask_matrix = self._data_plotter.load_matrices(patient_img_path)
@@ -247,6 +315,10 @@ class DataManager:
 
     def store_volume_tac(self, patient_id: str):
         # Build the volume
+        """
+        @brief Build, save, and clear the pending patient volume.
+        @param patient_id: Study identifier.
+        """
         self._volume_manager.build()
         # Get the dataframe
         df: pd.DataFrame = self._volume_manager.records
@@ -257,6 +329,8 @@ class DataManager:
 
     def _reset_vars(self):
         """
+        @brief Clear cached image-manager instances after processing a study.
+
         Clear cached image-manager instances after processing a study to avoid
         stale state and reduce memory retention.
         """
@@ -264,23 +338,34 @@ class DataManager:
 
     def create_all_tacs(self):
         """
+        @brief Generate TAC outputs for all studies using raw images.
+
+
         Generate TACs for all patients using the raw image state.
 
         This is the standard pipeline for unfiltered CT data.
+
         """
         self._create_tacs_for_state(dcm.ImageState.RAW)
 
     def create_all_tacs_filtered(self):
         """
+        @brief Generate TAC outputs for all studies using filtered images.
+
+
         Generate TACs for all patients using the filtered image state.
 
         This method is intended for processed data after brain-windowing and
         filtering operations have been applied.
+
         """
         self._create_tacs_for_state(dcm.ImageState.FILTER)
 
     def get_patient_img_path(self, patient_id: str, num_img: int):
         """
+        @brief Resolve a study frame index to its existing image directory.
+
+
         Resolve the path to the selected image for a given patient and frame index.
 
         Args:
@@ -292,6 +377,11 @@ class DataManager:
 
         Raises:
             NoFolderFound: If the target folder does not exist.
+
+        @param patient_id: Study identifier.
+        @param num_img: Frame index within the study.
+        @return: The value produced by this operation.
+        @throws NoFolderFound: If the operation encounters this error.
         """
         # Get the patient image path for the specified patient ID and image index
         patient_img_path: str = self.get_subfolders(patient_id)[num_img]
@@ -302,11 +392,17 @@ class DataManager:
 
     def create_tac(self, patient_id: str, num_img: int):
         """
+        @brief Plot the raw image and mask for one study frame.
+
+
         Plot a TAC for a given patient image frame using the raw data state.
 
         Args:
             patient_id (str): Identifier of the patient/study.
             num_img (int): Index of the source image frame.
+
+        @param patient_id: Study identifier.
+        @param num_img: Frame index within the study.
         """
         patient_img_path: str = self.get_patient_img_path(patient_id, num_img)
         # Load the matrices
@@ -316,11 +412,17 @@ class DataManager:
 
     def store_tac_png(self, patient_id: str, num_img: int):
         """
+        @brief Save the current raw TAC plot as a PNG file.
+
+
         Save the generated raw TAC plot as a PNG file.
 
         Args:
             patient_id (str): Identifier of the patient/study.
             num_img (int): Index of the plotted frame.
+
+        @param patient_id: Study identifier.
+        @param num_img: Frame index within the study.
         """
         # Store the plotted TAC for further analysis
         patient_path: str = self.get_path(patient_id)
@@ -331,11 +433,17 @@ class DataManager:
 
     def store_tac_video(self, patient_id: str, num_frame: int):
         """
+        @brief Save the raw TAC sequence as a patient video when enabled.
+
+
         Export the raw TAC sequence for a patient as a video.
 
         Args:
             patient_id (str): Identifier of the patient/study.
             num_frame (int): Number of frames to include in the exported video.
+
+        @param patient_id: Study identifier.
+        @param num_frame: Expected number of frames.
         """
         if self._check_video_flag():
             return
@@ -346,10 +454,14 @@ class DataManager:
 
     def _check_video_flag(self) -> bool:
         """
+        @brief Check whether video output is disabled for the active image state.
+
         Check whether video export is enabled for the current image state.
 
         Returns:
             bool: True if video generation was disabled by configuration; otherwise False.
+
+        @return: True when video creation is disabled; otherwise False.
         """
         if not self.flag.video:
             print("Don't create any videos as configuration settings.")
@@ -358,6 +470,9 @@ class DataManager:
 
     def create_filter_tac(self, patient_id: str, num_img: int):
         """
+        @brief Filter and plot one study frame using the filtered image state.
+
+
         Plot a TAC for the filtered image state of a patient frame.
 
         This method applies the configured filtering stage before generating the
@@ -366,6 +481,9 @@ class DataManager:
         Args:
             patient_id (str): Identifier of the patient/study.
             num_img (int): Index of the source image frame.
+
+        @param patient_id: Study identifier.
+        @param num_img: Frame index within the study.
         """
         patient_img_raw_path: str = self.get_patient_img_path(patient_id, num_img)
         # Filter the img
@@ -377,11 +495,17 @@ class DataManager:
 
     def store_tac_filter_png(self, patient_id: str, num_img: int):
         """
+        @brief Save the current filtered TAC plot as a PNG file.
+
+
         Save the filtered TAC plot as a PNG file.
 
         Args:
             patient_id (str): Identifier of the patient/study.
             num_img (int): Index of the plotted frame.
+
+        @param patient_id: Study identifier.
+        @param num_img: Frame index within the study.
         """
         # Store the plotted TAC for further analysis
         patient_path: str = self.get_path(patient_id)
@@ -392,11 +516,17 @@ class DataManager:
 
     def store_tac_filter_video(self, patient_id: str, num_frame: int):
         """
+        @brief Save the filtered TAC sequence as a patient video when enabled.
+
+
         Export the filtered TAC sequence for a patient as a video.
 
         Args:
             patient_id (str): Identifier of the patient/study.
             num_frame (int): Number of frames to include in the exported video.
+
+        @param patient_id: Study identifier.
+        @param num_frame: Expected number of frames.
         """
         if self._check_video_flag():
             return
@@ -407,6 +537,9 @@ class DataManager:
 
     def path_exists(self, path: str) -> bool:
         """
+        @brief Check whether a given filesystem path exists as a directory.
+
+
         Check whether a given filesystem path exists.
 
         Args:
@@ -414,16 +547,25 @@ class DataManager:
 
         Returns:
             bool: True if the path exists; otherwise False.
+
+        @param path: Filesystem path to inspect or process.
+        @return: The bool produced by this operation.
         """
         return self._folder_manager.folder_exists(path)
 
     @property
     def _study_catalog(self) -> dcm.StudyCatalog:
-        """Return the study catalog associated with the active dataset split."""
+        """
+        @brief Return the study catalog associated with the active dataset split.
+        @return: The catalog for the currently selected dataset split.
+        """
         return self._data_loader.get_study_catalog(self._state)
 
     def get_subfolders(self, study_id: str) -> tuple[str, ...]:
         """
+        @brief Return absolute frame-directory paths recorded for a study.
+
+
         Return the absolute subfolder paths for a study.
 
         Args:
@@ -431,11 +573,17 @@ class DataManager:
 
         Returns:
             tuple[str, ...]: Ordered subfolder paths for the given study.
+
+        @param study_id: Unique study identifier.
+        @return: The tuple[str, ...] produced by this operation.
         """
         return self._study_catalog.get_abs_subfolders(study_id)
 
     def get_path(self, study_id: str) -> str:
         """
+        @brief Return the recorded base filesystem path for a study.
+
+
         Return the base filesystem path for a study.
 
         Args:
@@ -443,10 +591,18 @@ class DataManager:
 
         Returns:
             str: Base study path.
+
+        @param study_id: Unique study identifier.
+        @return: The str produced by this operation.
         """
         return self._study_catalog.get_path(study_id)
 
     @property
     def all_studies(self) -> tuple[dcm.Study, ...]:
-        """Return all studies contained in the active dataset split."""
+        """
+        @brief Return all studies in the active dataset split.
+
+        Return all studies contained in the active dataset split.
+        @return: The tuple[dcm.Study, ...] produced by this operation.
+        """
         return self._study_catalog.studies

@@ -58,6 +58,13 @@ dependencies:
 python -m pip install -r requirements.txt
 ```
 
+## Documentation
+
+The API documentation is generated with Doxygen from the Python source
+docstrings. The documentation workflow builds it on pull requests and publishes
+it to [GitHub Pages](https://alberto-finazzi95.github.io/AI-Decisional-Tree/)
+when changes are pushed to `main`.
+
 The project uses `kagglehub` to download the dataset. Configure Kaggle access
 using the [KaggleHub authentication instructions](https://github.com/Kaggle/kagglehub#authenticate)
 before the first download; the download may require network access and Kaggle
