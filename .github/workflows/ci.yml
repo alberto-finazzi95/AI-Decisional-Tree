@@ -9,6 +9,7 @@ on:
 permissions:
   contents: read
 
+
 jobs:
   # Lint job: checks code quality and formatting
   lint:
