@@ -103,6 +103,7 @@ jobs:
           args: >
             -Dsonar.organization=alberto-finazzi
             -Dsonar.projectKey=alberto-finazzi95_AI-Decisional-Tree
+            -Dsonar.scm.provider=git
             -Dsonar.sources=ai-decisional-tree/src
             -Dsonar.tests=ai-decisional-tree/tests
             -Dsonar.python.version=3.14
