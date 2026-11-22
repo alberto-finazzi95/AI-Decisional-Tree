@@ -287,10 +287,10 @@ class DataManager:
             self._reset_vars()
 
     def create_volume_tacs(self):
-        # Looping in each single study
         """
         @brief Build and save volume records for every study in the active split.
         """
+        # Looping in each single study
         for single_study in self.all_studies:
             study_id: str = single_study.study_id
             num_frame: int = single_study.num_subfolders
@@ -606,3 +606,12 @@ class DataManager:
         @return: The tuple[dcm.Study, ...] produced by this operation.
         """
         return self._study_catalog.studies
+
+    def check_studies_catalog_lethality_balance(self):
+        """
+        @brief Check the balance of lethality values in the study catalog.
+        @return: The bool produced by this operation.
+        """
+        for dataset_type, study_catalog in self._data_loader.get_all_study_catalog().items():
+            lethality_percentage: float = study_catalog.get_lethality_percentage()
+            print(f"[{dataset_type.name}] Lethality balance: {lethality_percentage}%")

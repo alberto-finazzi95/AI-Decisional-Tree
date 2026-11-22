@@ -3,12 +3,26 @@
 """
 
 from .base_data import BaseData
-from .data_structures import DatasetType, Feature, Flag, ImageRange, ImageState, ImageStateToolkit, Study
+from .data_structures import (
+    ALL_FEATURES,
+    MAIN_FEATURES,
+    OUT_FEATURE,
+    DatasetType,
+    Feature,
+    Flag,
+    ImageRange,
+    ImageState,
+    ImageStateToolkit,
+    Study,
+)
 from .study_catalog import StudyCatalog
 
 __all__ = [
     "BaseData",
     "Feature",
+    "MAIN_FEATURES",
+    "ALL_FEATURES",
+    "OUT_FEATURE",
     "DatasetType",
     "Study",
     "StudyCatalog",

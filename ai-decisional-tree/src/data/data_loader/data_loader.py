@@ -27,6 +27,7 @@ class DataLoader(dcm.BaseData):
     """
 
     SUB_FOLDER_PREFIX: str = "00"
+    INVALID_VALUES: str = "unknown"
     TENTATIVES: int = 4
     DATASET_TYPES: tuple[dcm.DatasetType, ...] = (
         dcm.DatasetType.TRAIN,
@@ -95,6 +96,13 @@ class DataLoader(dcm.BaseData):
             dataset_type: dcm.StudyCatalog(summary_df) for dataset_type, summary_df in self._SUMMARIES.items()
         }
 
+    def get_all_study_catalog(self) -> dict[dcm.DatasetType, dcm.StudyCatalog]:
+        """
+        @brief Return the catalog containing all studies.
+        @return: The dict[dcm.DatasetType, dcm.StudyCatalog] produced by this operation.
+        """
+        return self._study_catalogs
+
     def get_study_catalog(self, dataset_type: dcm.DatasetType) -> dcm.StudyCatalog:
         """
         @brief Return the catalog for a dataset split.
@@ -122,6 +130,8 @@ class DataLoader(dcm.BaseData):
         @brief Read the summary CSV and partition its rows by dataset split.
         """
         self._summary_csv_raw: pd.DataFrame = pd.read_csv(self._summary_csv_path)
+        # Replace the unknown vales with NaN to avoid issues with missing values
+        self._summary_csv_raw.replace(self.INVALID_VALUES, pd.NA, inplace=True)
         print(
             f"Summary CSV loaded from {self._summary_csv_raw.shape[0]} rows and {self._summary_csv_raw.shape[1]} columns."
         )
@@ -140,7 +150,7 @@ class DataLoader(dcm.BaseData):
         summary_df: pd.DataFrame = self._SUMMARIES[dataset_type]
         summary_df.loc[summary_df[dcm.Feature.NAME] == file_name, dcm.Feature.PATH] = file_path
 
-    def _get_data_path(self, data_name: str, dataset_type_folder: dcm.DatasetType) -> str:
+    def _get_data_path(self, data_name: str, dataset_type_folder: str | dcm.DatasetType) -> str:
         """
         @brief Compose a study path beneath its dataset-split directory.
         @param data_name: Study directory name.

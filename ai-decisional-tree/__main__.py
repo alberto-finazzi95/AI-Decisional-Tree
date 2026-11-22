@@ -23,13 +23,19 @@ if __name__ == "__main__":
         data_toolkit=data_toolkit,
     )
 
-    # For all patients
-    for state in src.DatasetType:
-        # For train, val and test set
-        data_manager.state = state
-        # Plot all raw TACs as images and videos
-        data_manager.create_all_tacs()
-        # Plot all filtered TACs as images and videos
-        data_manager.create_all_tacs_filtered()
-        # Create the volumes files for the model
-        data_manager.create_volume_tacs()
+    # Check if data import is enabled in the configuration
+    import_data: bool = config_parser.import_data
+    if import_data:
+        # For all patients
+        for state in src.DatasetType:
+            # For train, val and test set
+            data_manager.state = state
+            # Plot all raw TACs as images and videos
+            data_manager.create_all_tacs()
+            # Plot all filtered TACs as images and videos
+            data_manager.create_all_tacs_filtered()
+            # Create the volumes files for the model
+            data_manager.create_volume_tacs()
+
+    # Check the balance of lethality values in the study catalog
+    data_manager.check_studies_catalog_lethality_balance()

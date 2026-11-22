@@ -28,3 +28,14 @@ class Feature(StrEnum):
     PATH = "path"
     NUM_SUB = "num subfolders"
     SUBFOLDERS = "subfolders"
+
+
+OUT_FEATURE: str = Feature.LETHALITY
+
+MAIN_FEATURES: tuple[Feature, ...] = (Feature.AGE, Feature.SEX, Feature.DSA, Feature.NIHSS, Feature.TIME)
+
+ALL_FEATURES: tuple[Feature, ...] = (
+    Feature.MANUFACTURER,
+    Feature.MODEL,
+    Feature.DEVICE,
+) + MAIN_FEATURES

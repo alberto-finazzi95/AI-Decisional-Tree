@@ -42,6 +42,17 @@ class ConfigParser(cpb.ConfigParserBase):
         return self.get(ds.Section.DATASET, ds.Option.OUTPUT_PATH)
 
     @property
+    def import_data(self) -> bool:
+        """
+        @brief Return whether data import is enabled in the configuration.
+        @return: The bool produced by this operation.
+        @throws NoSectionError: When the phases section is missing.
+        @throws NoOptionError: When the import-data option is missing.
+        @throws ConfigError: When the value cannot be read or converted.
+        """
+        return self.get_boolean(ds.Section.PHASES, ds.Option.IMPORT_DATA)
+
+    @property
     def save_img(self) -> bool:
         """
         @brief Return whether raw TAC images should be saved.

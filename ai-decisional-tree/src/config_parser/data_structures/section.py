@@ -11,4 +11,5 @@ class Section(StrEnum):
     """
 
     DATASET = "Dataset"
+    PHASES = "Phases"
     STORAGE = "Storing data"

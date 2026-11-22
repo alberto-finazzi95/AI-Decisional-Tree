@@ -2,6 +2,7 @@
 @brief Build and query study metadata from a dataset summary table.
 """
 
+import numpy as np
 import pandas as pd
 
 import src.data.common.data_structures as ds
@@ -37,6 +38,25 @@ class StudyCatalog:
             )
             for _, row in summary.iterrows()
         }
+        # Get the percentage of lethality values that are true or false
+        self._lethality_percentage: float = self._calculate_lethality_percentage(summary)
+        #
+
+    def get_lethality_percentage(self) -> float:
+        """
+        @brief Return the percentage of lethality values of the study catalog.
+        @return: The float produced by this operation."""
+        return self._lethality_percentage
+
+    @staticmethod
+    def _calculate_lethality_percentage(df: pd.DataFrame) -> float:
+        """
+        @brief Calculate the percentage of lethality values that are true or false.
+        @param df: Dataset summary DataFrame.
+        @return: The float produced by this operation.
+        """
+        lethality: float = df[ds.Feature.LETHALITY].sum() / len(df[ds.Feature.LETHALITY]) * 100.0
+        return np.round(lethality, 2)
 
     @staticmethod
     def _import_subfolders(subfolders_str: str) -> tuple[str, ...]:
