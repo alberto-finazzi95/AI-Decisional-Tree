@@ -627,3 +627,15 @@ class DataManager:
                 f"[{dataset_type.name}] Sex distribution: {sex_distribution_text or 'no values'}, "
                 f"missing values: {study_catalog.get_sex_missing_count()}%"
             )
+            time_distribution: dict[str, float] = study_catalog.get_time_distribution()
+            time_distribution_text: str = ", ".join(
+                f"{time_range}: {percentage:.2f}%" for time_range, percentage in time_distribution.items()
+            )
+            print(
+                f"[{dataset_type.name}] Time-range distribution: {time_distribution_text or 'no values'}, "
+                f"missing values: {study_catalog.get_time_missing_percentage():.2f}%"
+            )
+            print(
+                f"[{dataset_type.name}] DSA positive: {study_catalog.get_dsa_percentage():.2f}%, "
+                f"missing values: {study_catalog.get_dsa_missing_percentage():.2f}%"
+            )

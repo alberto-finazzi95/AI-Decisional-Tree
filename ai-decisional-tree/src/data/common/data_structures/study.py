@@ -5,6 +5,11 @@
 from dataclasses import dataclass
 from pathlib import Path
 
+import src.data.common.data_structures as ds
+import src.data.common.data_structures.exceptions as ex
+
+TIME_SEP: str = "-"  # Separator used in time ranges (e.g., "0-6" for 0 to 6 hours)
+
 
 @dataclass(frozen=True)
 class Study:
@@ -34,3 +39,24 @@ class Study:
         @return: The value produced by this operation.
         """
         return tuple(str(Path(self.path) / subfolder) for subfolder in self.subfolders)
+
+    @property
+    def time_range(self) -> ds.TimeRange | None:
+        """
+        @brief Return the time range for the study.
+        @return: The parsed time range, or None when the value is missing.
+        """
+        try:
+            # Convert each bound to a number; invalid values are reported as an invalid range.
+            time: list[float] = [float(x.strip()) for x in self.time.split(TIME_SEP)]
+        except ValueError as err:
+            raise ex.InvalidTimeRange(self.time) from err
+
+        # A single value is an exact time; two values represent the lower and upper bounds.
+        match len(time):
+            case 1:
+                return ds.TimeRange(time[0], time[0])
+            case 2:
+                return ds.TimeRange(time[0], time[1])
+            case _:
+                raise ex.InvalidTimeRange(self.time)

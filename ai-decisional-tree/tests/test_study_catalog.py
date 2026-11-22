@@ -155,6 +155,44 @@ class StudyCatalogTests(unittest.TestCase):
         self.assertEqual(catalog.get_sex_distribution(), {"F": 33.33, "M": 33.33})
         self.assertEqual(np.around(catalog.get_sex_missing_count(), 2), 33.33)
 
+    def test_time_and_dsa_distributions_include_missing_percentages(self):
+        """Tests time-range grouping and DSA missing-value percentages."""
+        catalog = dcm.StudyCatalog(
+            pd.DataFrame(
+                [
+                    {
+                        dcm.Feature.NAME: "range-single",
+                        dcm.Feature.AGE: 50,
+                        dcm.Feature.SEX: "F",
+                        dcm.Feature.LETHALITY: False,
+                        dcm.Feature.TIME: "2.5",
+                        dcm.Feature.DSA: True,
+                    },
+                    {
+                        dcm.Feature.NAME: "range-pair",
+                        dcm.Feature.AGE: 60,
+                        dcm.Feature.SEX: "M",
+                        dcm.Feature.LETHALITY: False,
+                        dcm.Feature.TIME: "2.5-2.5",
+                        dcm.Feature.DSA: False,
+                    },
+                    {
+                        dcm.Feature.NAME: "missing",
+                        dcm.Feature.AGE: 70,
+                        dcm.Feature.SEX: "F",
+                        dcm.Feature.LETHALITY: False,
+                        dcm.Feature.TIME: pd.NA,
+                        dcm.Feature.DSA: pd.NA,
+                    },
+                ]
+            )
+        )
+
+        self.assertEqual(catalog.get_time_distribution(), {"2.5-2.5": 66.67})
+        self.assertEqual(catalog.get_time_missing_percentage(), 33.33)
+        self.assertEqual(catalog.get_dsa_percentage(), 33.33)
+        self.assertEqual(catalog.get_dsa_missing_percentage(), 33.33)
+
     def test_unknown_study_raises_study_not_found_error(self):
         """Tests that looking up an unknown identifier raises the expected error."""
         with self.assertRaisesRegex(ex.StudyNotFoundError, self.MISSING_STUDY_ID):

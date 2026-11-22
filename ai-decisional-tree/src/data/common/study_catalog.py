@@ -16,6 +16,8 @@ class StudyCatalog:
     Provides study-oriented access to the dataset summary DataFrame.
     """
 
+    STR_TO_BOOL: dict[str, bool] = {"True": True, "False": False}
+
     def __init__(self, summary: pd.DataFrame):
         """
         @brief Index study metadata from the supplied summary DataFrame.
@@ -42,9 +44,11 @@ class StudyCatalog:
         self._num_studies: int = len(self._studies)
         # Get the percentage of lethality values that are true or false
         self._lethality_percentage: float = self._calculate_lethality_percentage(summary)
-        # Sex and age distributions
+        # Categorical and numeric feature summaries
         self._sex_distribution, self._sex_missing_count = self._set_sex_distribution(summary)
         self._age_distribution: tuple[float, float] = self._set_age_distribution(summary)
+        self._time_distribution, self._time_missing_percentage = self._set_time_distribution()
+        self._dsa_percentage, self._dsa_missing_percentage = self._set_dsa_distribution(summary)
 
     def get_lethality_percentage(self) -> float:
         """
@@ -72,6 +76,34 @@ class StudyCatalog:
         @return: The tuple[float, float] produced by this operation.
         """
         return self._age_distribution
+
+    def get_time_distribution(self) -> dict[str, float]:
+        """
+        @brief Return the percentage distribution of observed time ranges.
+        @return: A dictionary mapping time ranges to percentages.
+        """
+        return self._time_distribution
+
+    def get_time_missing_percentage(self) -> float:
+        """
+        @brief Return the percentage of studies with a missing time range.
+        @return: The percentage of missing time ranges.
+        """
+        return self._time_missing_percentage
+
+    def get_dsa_percentage(self) -> float:
+        """
+        @brief Return the percentage of studies with a positive DSA value.
+        @return: The percentage of positive DSA values.
+        """
+        return self._dsa_percentage
+
+    def get_dsa_missing_percentage(self) -> float:
+        """
+        @brief Return the percentage of studies with a missing DSA value.
+        @return: The percentage of missing DSA values.
+        """
+        return self._dsa_missing_percentage
 
     def _calculate_lethality_percentage(self, df: pd.DataFrame) -> float:
         """
@@ -105,6 +137,41 @@ class StudyCatalog:
         mean_age: float = np.mean(age_values)
         std_age: float = np.std(age_values)
         return self._round_value(mean_age), self._round_value(std_age)
+
+    def _set_time_distribution(self) -> tuple[dict[str, float], float]:
+        """
+        @brief Calculate percentages for observed time ranges and missing values.
+        @return: The time-range percentages and missing-value percentage.
+        """
+        counts: dict[str, int] = {}
+        missing_count: int = 0
+        for study in self._studies.values():
+            time_range: ds.TimeRange | None = study.time_range
+            if time_range is None:
+                missing_count += 1
+                continue
+            label: str = str(time_range)
+            counts[label] = counts.get(label, 0) + 1
+
+        distribution: dict[str, float] = {
+            label: self._round_value(self._percentage(count)) for label, count in counts.items()
+        }
+        missing_percentage: float = self._round_value(self._percentage(missing_count))
+        return distribution, missing_percentage
+
+    def _set_dsa_distribution(self, df: pd.DataFrame) -> tuple[float, float]:
+        """
+        @brief Calculate the percentages of positive and missing DSA values.
+        @param df: Dataset summary DataFrame.
+        @return: The positive DSA percentage and missing-value percentage.
+        """
+        dsa_values: pd.Series = df[ds.Feature.DSA].replace(self.STR_TO_BOOL)
+        positive_count: int = int(dsa_values.eq(True).fillna(False).sum())
+        missing_count: int = int(dsa_values.isna().sum())
+        return (
+            self._round_value(self._percentage(positive_count)),
+            self._round_value(self._percentage(missing_count)),
+        )
 
     @staticmethod
     def _round_value(value: float, decimals: int = 2) -> float:
