@@ -11,10 +11,28 @@ permissions:
 
 
 jobs:
+  # Get the software version from the __version__.py file and make it available to other jobs
+  get-sw-version:
+    name: Get SW version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.get-version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v5
+
+      - name: Get SW version
+        id: get-version
+        run: |
+          VERSION=$(python -c "import runpy; print(runpy.run_path('ai-decisional-tree/__version__.py')['VERSION'])")
+          echo "SW version: $VERSION"
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
   # Lint job: checks code quality and formatting
   lint:
     name: Lint and format check
     runs-on: ubuntu-latest
+    needs: [get-sw-version]
     continue-on-error: true
     container:
       image: ghcr.io/alberto-finazzi95/ai-decisional-tree-container:latest
@@ -136,6 +154,22 @@ jobs:
       contents: read
       pages: write
       id-token: write
+
+  # Publish the current software-version tag after all CI and documentation jobs succeed
+  publish-version-tag:
+    name: Publish version tag
+    needs: [get-sw-version, lint, tests, sonar, docs]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository with tags
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+
+      - name: Create and publish version tag if missing
+        run: python .github/scripts/publish_version_tag.py "${{ needs.get-sw-version.outputs.version }}"
 
   # Review pull requests with PR-Agent without exposing the Gemini key to forks
   pr-agent:
