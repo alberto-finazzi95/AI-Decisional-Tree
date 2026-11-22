@@ -28,3 +28,16 @@ class IndexNotFoundError(IndexError):
         @param study_id: Unique study identifier.
         """
         super().__init__(f"Subfolder index {subfolder_index} is out of range for study {study_id}.")
+
+
+class FeatureNotFoundError(KeyError):
+    """
+    @brief Raised when a feature is absent from the catalog.
+    """
+
+    def __init__(self, feature: str):
+        """
+        @brief Create a lookup error identifying the missing feature.
+        @param feature: Name of the missing feature.
+        """
+        super().__init__(f"Feature not found: {feature}")

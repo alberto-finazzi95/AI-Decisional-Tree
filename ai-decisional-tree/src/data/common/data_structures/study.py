@@ -41,7 +41,7 @@ class Study:
         return tuple(str(Path(self.path) / subfolder) for subfolder in self.subfolders)
 
     @property
-    def time_range(self) -> ds.TimeRange | None:
+    def time_range(self) -> ds.TimeRange:
         """
         @brief Return the time range for the study.
         @return: The parsed time range, or None when the value is missing.

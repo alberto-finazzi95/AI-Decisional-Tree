@@ -9,6 +9,25 @@ import src.data.common.data_structures as ds
 import src.data.common.exceptions as ex
 
 
+def missing_feature_df(func):
+    """
+    @brief Decorator to handle missing feature values in DataFrame operations.
+    @param func: The function to decorate.
+    @return: The decorated function.
+    """
+
+    def wrapper(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except KeyError as err:
+            # Extract the missing feature name from the KeyError message
+            missing_key: str = err.args[0]
+            # Handle missing feature values
+            raise ex.FeatureNotFoundError(str(missing_key)) from err
+
+    return wrapper
+
+
 class StudyCatalog:
     """
     @brief Index studies from a summary DataFrame and provide study lookups.
@@ -105,6 +124,7 @@ class StudyCatalog:
         """
         return self._dsa_missing_percentage
 
+    @missing_feature_df
     def _calculate_lethality_percentage(self, df: pd.DataFrame) -> float:
         """
         @brief Calculate the percentage of lethality values that are true or false.
@@ -114,6 +134,7 @@ class StudyCatalog:
         lethality: float = self._percentage(df[ds.Feature.LETHALITY].sum())
         return self._round_value(lethality)
 
+    @missing_feature_df
     def _set_sex_distribution(self, df: pd.DataFrame) -> tuple[dict[str, float], float]:
         """
         @brief Calculate the distribution of sex values in the dataset summary.
@@ -127,6 +148,7 @@ class StudyCatalog:
         }
         return distribution, self._round_value(missing_sex_count)
 
+    @missing_feature_df
     def _set_age_distribution(self, df: pd.DataFrame) -> tuple[float, float]:
         """
         @brief Calculate the distribution of age values in the dataset summary.
@@ -159,6 +181,7 @@ class StudyCatalog:
         missing_percentage: float = self._round_value(self._percentage(missing_count))
         return distribution, missing_percentage
 
+    @missing_feature_df
     def _set_dsa_distribution(self, df: pd.DataFrame) -> tuple[float, float]:
         """
         @brief Calculate the percentages of positive and missing DSA values.

@@ -6,6 +6,7 @@ import pandas as pd
 import src.common as src
 import src.config_parser as cp
 import src.data.common as dcm
+import src.data.common.exceptions as dcm_ex
 import src.data.data_loader as dl
 import src.data.data_loader.exceptions as ex
 from requests.exceptions import SSLError
@@ -144,9 +145,33 @@ class DataLoaderTests(unittest.TestCase):
         """Tests split selection, file metadata enrichment, and catalog construction."""
         summary = pd.DataFrame(
             [
-                {dcm.Feature.NAME: self.TRAIN_STUDY, dcm.Feature.PART: dcm.DatasetType.TRAIN},
-                {dcm.Feature.NAME: self.VALIDATION_STUDY, dcm.Feature.PART: dcm.DatasetType.VALIDATION},
-                {dcm.Feature.NAME: self.TEST_STUDY, dcm.Feature.PART: dcm.DatasetType.TEST},
+                {
+                    dcm.Feature.NAME: self.TRAIN_STUDY,
+                    dcm.Feature.PART: dcm.DatasetType.TRAIN,
+                    dcm.Feature.LETHALITY: False,
+                    dcm.Feature.SEX: "F",
+                    dcm.Feature.AGE: 50,
+                    dcm.Feature.TIME: "0-24",
+                    dcm.Feature.DSA: True,
+                },
+                {
+                    dcm.Feature.NAME: self.VALIDATION_STUDY,
+                    dcm.Feature.PART: dcm.DatasetType.VALIDATION,
+                    dcm.Feature.LETHALITY: False,
+                    dcm.Feature.SEX: "M",
+                    dcm.Feature.AGE: 60,
+                    dcm.Feature.TIME: "0-24",
+                    dcm.Feature.DSA: False,
+                },
+                {
+                    dcm.Feature.NAME: self.TEST_STUDY,
+                    dcm.Feature.PART: dcm.DatasetType.TEST,
+                    dcm.Feature.LETHALITY: True,
+                    dcm.Feature.SEX: "F",
+                    dcm.Feature.AGE: 70,
+                    dcm.Feature.TIME: "0-24",
+                    dcm.Feature.DSA: True,
+                },
             ]
         )
         with patch(self.SUMMARY_READ_CSV, return_value=summary) as read_csv:
@@ -182,6 +207,26 @@ class DataLoaderTests(unittest.TestCase):
             self.loader.get_study_catalog(dcm.DatasetType.TEST).get_study(self.TEST_STUDY).subfolders,
             self.SORTED_FRAME_FOLDERS,
         )
+
+    def test_process_data_raises_feature_not_found_for_missing_summary_column(self):
+        """Tests that a missing required summary feature is reported by the catalog."""
+        summary = pd.DataFrame(
+            [
+                {
+                    dcm.Feature.NAME: self.TRAIN_STUDY,
+                    dcm.Feature.PART: dcm.DatasetType.TRAIN,
+                    dcm.Feature.LETHALITY: False,
+                    dcm.Feature.SEX: "F",
+                    dcm.Feature.AGE: 50,
+                    dcm.Feature.TIME: "0-24",
+                }
+            ]
+        )
+
+        with patch(self.SUMMARY_READ_CSV, return_value=summary):
+            with patch.object(self.folder_manager, self.SUBFOLDERS_METHOD, return_value=[]):
+                with self.assertRaisesRegex(dcm_ex.FeatureNotFoundError, "dsa"):
+                    self.loader.process_data()
 
     def test_process_data_raises_for_missing_study_directory(self):
         """Tests that missing study paths are reported with the affected split."""

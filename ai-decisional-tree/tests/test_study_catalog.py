@@ -36,6 +36,7 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.DEVICE: self.DEVICE,
                         dcm.Feature.AGE: 85,
                         dcm.Feature.SEX: self.FEMALE,
+                        dcm.Feature.DSA: True,
                         dcm.Feature.NIHSS: 4,
                         dcm.Feature.TIME: self.TIME_RANGE,
                         dcm.Feature.LETHALITY: False,
@@ -50,6 +51,7 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.DEVICE: "GE Revolution",
                         dcm.Feature.AGE: 72,
                         dcm.Feature.SEX: "M",
+                        dcm.Feature.DSA: False,
                         dcm.Feature.NIHSS: 7,
                         dcm.Feature.TIME: "24-48",
                         dcm.Feature.LETHALITY: True,
@@ -105,8 +107,21 @@ class StudyCatalogTests(unittest.TestCase):
 
     def test_optional_columns_use_study_defaults_when_absent(self):
         """Tests that missing optional columns use the default values from Study."""
-        # Create a minimal catalog with only the required identifier.
-        catalog = dcm.StudyCatalog(pd.DataFrame([{dcm.Feature.NAME: self.MINIMAL_STUDY_ID}]))
+        # Keep fields required for catalog statistics while omitting optional Study metadata.
+        catalog = dcm.StudyCatalog(
+            pd.DataFrame(
+                [
+                    {
+                        dcm.Feature.NAME: self.MINIMAL_STUDY_ID,
+                        dcm.Feature.AGE: 50,
+                        dcm.Feature.SEX: self.FEMALE,
+                        dcm.Feature.DSA: False,
+                        dcm.Feature.LETHALITY: False,
+                        dcm.Feature.TIME: self.TIME_RANGE,
+                    }
+                ]
+            )
+        )
 
         # Retrieve the converted row to check its default values.
         study = catalog.get_study(self.MINIMAL_STUDY_ID)
@@ -116,14 +131,37 @@ class StudyCatalogTests(unittest.TestCase):
         self.assertEqual(study.manufacturer, "")
         self.assertEqual(study.model, "")
         self.assertEqual(study.device, "")
-        self.assertEqual(study.age, -1)
-        self.assertEqual(study.sex, "")
+        self.assertEqual(study.age, 50)
+        self.assertEqual(study.sex, self.FEMALE)
         self.assertEqual(study.nihss, -1)
-        self.assertEqual(study.time, "")
-        self.assertEqual(study.lethality, "")
+        self.assertEqual(study.time, self.TIME_RANGE)
+        self.assertFalse(study.lethality)
         self.assertEqual(study.path, "")
         self.assertEqual(study.num_subfolders, 0)
         self.assertEqual(study.subfolders, ())
+
+    def test_missing_required_feature_raises_feature_not_found_error(self):
+        """Tests that missing statistics columns raise a feature-specific error."""
+        required_features = (
+            dcm.Feature.LETHALITY,
+            dcm.Feature.SEX,
+            dcm.Feature.AGE,
+            dcm.Feature.DSA,
+        )
+        row = {
+            dcm.Feature.NAME: self.MINIMAL_STUDY_ID,
+            dcm.Feature.LETHALITY: False,
+            dcm.Feature.SEX: self.FEMALE,
+            dcm.Feature.AGE: 50,
+            dcm.Feature.DSA: False,
+            dcm.Feature.TIME: self.TIME_RANGE,
+        }
+
+        for feature in required_features:
+            with self.subTest(feature=feature):
+                summary = pd.DataFrame([{key: value for key, value in row.items() if key != feature}])
+                with self.assertRaisesRegex(ex.FeatureNotFoundError, feature.value):
+                    dcm.StudyCatalog(summary)
 
     def test_sex_distribution_counts_missing_values(self):
         """Tests that missing sex values are counted separately from percentages."""
@@ -133,20 +171,26 @@ class StudyCatalogTests(unittest.TestCase):
                     {
                         dcm.Feature.NAME: "female",
                         dcm.Feature.SEX: "F",
+                        dcm.Feature.DSA: False,
                         dcm.Feature.LETHALITY: False,
                         dcm.Feature.AGE: 50,
+                        dcm.Feature.TIME: self.TIME_RANGE,
                     },
                     {
                         dcm.Feature.NAME: "male",
                         dcm.Feature.SEX: "M",
+                        dcm.Feature.DSA: False,
                         dcm.Feature.LETHALITY: False,
                         dcm.Feature.AGE: 60,
+                        dcm.Feature.TIME: self.TIME_RANGE,
                     },
                     {
                         dcm.Feature.NAME: "missing",
                         dcm.Feature.SEX: pd.NA,
+                        dcm.Feature.DSA: False,
                         dcm.Feature.LETHALITY: False,
                         dcm.Feature.AGE: 70,
+                        dcm.Feature.TIME: self.TIME_RANGE,
                     },
                 ]
             )
@@ -181,15 +225,15 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.AGE: 70,
                         dcm.Feature.SEX: "F",
                         dcm.Feature.LETHALITY: False,
-                        dcm.Feature.TIME: pd.NA,
+                        dcm.Feature.TIME: "7-8",
                         dcm.Feature.DSA: pd.NA,
                     },
                 ]
             )
         )
 
-        self.assertEqual(catalog.get_time_distribution(), {"2.5-2.5": 66.67})
-        self.assertEqual(catalog.get_time_missing_percentage(), 33.33)
+        self.assertEqual(catalog.get_time_distribution(), {"2.5-2.5": 66.67, "7.0-8.0": 33.33})
+        self.assertEqual(catalog.get_time_missing_percentage(), 0.0)
         self.assertEqual(catalog.get_dsa_percentage(), 33.33)
         self.assertEqual(catalog.get_dsa_missing_percentage(), 33.33)
 
