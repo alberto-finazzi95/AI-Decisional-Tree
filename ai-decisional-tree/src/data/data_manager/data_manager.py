@@ -618,8 +618,13 @@ class DataManager:
             print(f"[{dataset_type.name}] Lethality balance: {lethality_percentage}%")
             # Age distribution and sex percentage calculation
             age_mean, age_std = study_catalog.get_age_distribution()
+            nihss_mean, nihss_std, nihss_missing_percentage = study_catalog.get_nihss_distribution()
             sex_distribution: dict[str, float] = study_catalog.get_sex_distribution()
             print(f"[{dataset_type.name}] Age mean: {age_mean}, Age std: {age_std}")
+            print(
+                f"[{dataset_type.name}] NIHSS mean: {nihss_mean}, std: {nihss_std}, "
+                f"missing values: {nihss_missing_percentage:.2f}%"
+            )
             sex_distribution_text: str = ", ".join(
                 f"{sex}: {percentage:.2f}%" for sex, percentage in sex_distribution.items()
             )

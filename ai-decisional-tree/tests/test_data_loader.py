@@ -153,6 +153,7 @@ class DataLoaderTests(unittest.TestCase):
                     dcm.Feature.AGE: 50,
                     dcm.Feature.TIME: "0-24",
                     dcm.Feature.DSA: True,
+                    dcm.Feature.NIHSS: 4,
                 },
                 {
                     dcm.Feature.NAME: self.VALIDATION_STUDY,
@@ -162,6 +163,7 @@ class DataLoaderTests(unittest.TestCase):
                     dcm.Feature.AGE: 60,
                     dcm.Feature.TIME: "0-24",
                     dcm.Feature.DSA: False,
+                    dcm.Feature.NIHSS: 6,
                 },
                 {
                     dcm.Feature.NAME: self.TEST_STUDY,
@@ -171,6 +173,7 @@ class DataLoaderTests(unittest.TestCase):
                     dcm.Feature.AGE: 70,
                     dcm.Feature.TIME: "0-24",
                     dcm.Feature.DSA: True,
+                    dcm.Feature.NIHSS: 8,
                 },
             ]
         )
@@ -219,6 +222,7 @@ class DataLoaderTests(unittest.TestCase):
                     dcm.Feature.SEX: "F",
                     dcm.Feature.AGE: 50,
                     dcm.Feature.TIME: "0-24",
+                    dcm.Feature.NIHSS: 4,
                 }
             ]
         )

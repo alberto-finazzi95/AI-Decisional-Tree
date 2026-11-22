@@ -66,6 +66,7 @@ class StudyCatalog:
         # Categorical and numeric feature summaries
         self._sex_distribution, self._sex_missing_count = self._set_sex_distribution(summary)
         self._age_distribution: tuple[float, float] = self._set_age_distribution(summary)
+        self._nihss_distribution: tuple[float, float, float] = self._set_nihss_distribution(summary)
         self._time_distribution, self._time_missing_percentage = self._set_time_distribution()
         self._dsa_percentage, self._dsa_missing_percentage = self._set_dsa_distribution(summary)
 
@@ -95,6 +96,13 @@ class StudyCatalog:
         @return: The tuple[float, float] produced by this operation.
         """
         return self._age_distribution
+
+    def get_nihss_distribution(self) -> tuple[float, float, float]:
+        """
+        @brief Return NIHSS mean, standard deviation, and missing-value percentage.
+        @return: The mean, standard deviation, and missing percentage.
+        """
+        return self._nihss_distribution
 
     def get_time_distribution(self) -> dict[str, float]:
         """
@@ -159,6 +167,23 @@ class StudyCatalog:
         mean_age: float = np.mean(age_values)
         std_age: float = np.std(age_values)
         return self._round_value(mean_age), self._round_value(std_age)
+
+    @missing_feature_df
+    def _set_nihss_distribution(self, df: pd.DataFrame) -> tuple[float, float, float]:
+        """
+        @brief Calculate NIHSS mean, standard deviation and missing-value percentage.
+        @param df: Dataset summary DataFrame.
+        @return: Mean, population standard deviation and missing percentage.
+        """
+        nihss_values: pd.Series = pd.to_numeric(df[ds.Feature.NIHSS], errors="coerce")
+        mean_nihss: float = nihss_values.mean()
+        std_nihss: float = nihss_values.std(ddof=0)
+        missing_percentage: float = self._percentage(nihss_values.isna().sum())
+        return (
+            self._round_value(mean_nihss),
+            self._round_value(std_nihss),
+            self._round_value(missing_percentage),
+        )
 
     def _set_time_distribution(self) -> tuple[dict[str, float], float]:
         """

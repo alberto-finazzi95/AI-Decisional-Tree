@@ -117,6 +117,7 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.SEX: self.FEMALE,
                         dcm.Feature.DSA: False,
                         dcm.Feature.LETHALITY: False,
+                        dcm.Feature.NIHSS: 5,
                         dcm.Feature.TIME: self.TIME_RANGE,
                     }
                 ]
@@ -133,7 +134,7 @@ class StudyCatalogTests(unittest.TestCase):
         self.assertEqual(study.device, "")
         self.assertEqual(study.age, 50)
         self.assertEqual(study.sex, self.FEMALE)
-        self.assertEqual(study.nihss, -1)
+        self.assertEqual(study.nihss, 5)
         self.assertEqual(study.time, self.TIME_RANGE)
         self.assertFalse(study.lethality)
         self.assertEqual(study.path, "")
@@ -147,6 +148,7 @@ class StudyCatalogTests(unittest.TestCase):
             dcm.Feature.SEX,
             dcm.Feature.AGE,
             dcm.Feature.DSA,
+            dcm.Feature.NIHSS,
         )
         row = {
             dcm.Feature.NAME: self.MINIMAL_STUDY_ID,
@@ -154,6 +156,7 @@ class StudyCatalogTests(unittest.TestCase):
             dcm.Feature.SEX: self.FEMALE,
             dcm.Feature.AGE: 50,
             dcm.Feature.DSA: False,
+            dcm.Feature.NIHSS: 5,
             dcm.Feature.TIME: self.TIME_RANGE,
         }
 
@@ -174,6 +177,7 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.DSA: False,
                         dcm.Feature.LETHALITY: False,
                         dcm.Feature.AGE: 50,
+                        dcm.Feature.NIHSS: 4,
                         dcm.Feature.TIME: self.TIME_RANGE,
                     },
                     {
@@ -182,6 +186,7 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.DSA: False,
                         dcm.Feature.LETHALITY: False,
                         dcm.Feature.AGE: 60,
+                        dcm.Feature.NIHSS: 6,
                         dcm.Feature.TIME: self.TIME_RANGE,
                     },
                     {
@@ -190,6 +195,7 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.DSA: False,
                         dcm.Feature.LETHALITY: False,
                         dcm.Feature.AGE: 70,
+                        dcm.Feature.NIHSS: 8,
                         dcm.Feature.TIME: self.TIME_RANGE,
                     },
                 ]
@@ -211,6 +217,7 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.LETHALITY: False,
                         dcm.Feature.TIME: "2.5",
                         dcm.Feature.DSA: True,
+                        dcm.Feature.NIHSS: 4,
                     },
                     {
                         dcm.Feature.NAME: "range-pair",
@@ -219,6 +226,7 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.LETHALITY: False,
                         dcm.Feature.TIME: "2.5-2.5",
                         dcm.Feature.DSA: False,
+                        dcm.Feature.NIHSS: 8,
                     },
                     {
                         dcm.Feature.NAME: "missing",
@@ -227,6 +235,7 @@ class StudyCatalogTests(unittest.TestCase):
                         dcm.Feature.LETHALITY: False,
                         dcm.Feature.TIME: "7-8",
                         dcm.Feature.DSA: pd.NA,
+                        dcm.Feature.NIHSS: pd.NA,
                     },
                 ]
             )
@@ -236,6 +245,7 @@ class StudyCatalogTests(unittest.TestCase):
         self.assertEqual(catalog.get_time_missing_percentage(), 0.0)
         self.assertEqual(catalog.get_dsa_percentage(), 33.33)
         self.assertEqual(catalog.get_dsa_missing_percentage(), 33.33)
+        self.assertEqual(catalog.get_nihss_distribution(), (6.0, 2.0, 33.33))
 
     def test_unknown_study_raises_study_not_found_error(self):
         """Tests that looking up an unknown identifier raises the expected error."""
