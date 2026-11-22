@@ -61,76 +61,95 @@ class StudyCatalog:
         }
         # Number of studies indexed by this catalog
         self._num_studies: int = len(self._studies)
-        # Get the percentage of lethality values that are true or false
-        self._lethality_percentage: float = self._calculate_lethality_percentage(summary)
-        # Categorical and numeric feature summaries
-        self._sex_distribution, self._sex_missing_count = self._set_sex_distribution(summary)
-        self._age_distribution: tuple[float, float] = self._set_age_distribution(summary)
-        self._nihss_distribution: tuple[float, float, float] = self._set_nihss_distribution(summary)
-        self._time_distribution, self._time_missing_percentage = self._set_time_distribution()
-        self._dsa_percentage, self._dsa_missing_percentage = self._set_dsa_distribution(summary)
+        sex_distribution, sex_missing_percentage = self._set_sex_distribution(summary)
+        age_mean, age_std = self._set_age_distribution(summary)
+        nihss_mean, nihss_std, nihss_missing_percentage = self._set_nihss_distribution(summary)
+        time_distribution, time_missing_percentage = self._set_time_distribution()
+        dsa_positive_percentage, dsa_missing_percentage = self._set_dsa_distribution(summary)
+        self._statistics: ds.StudyStatistics = ds.StudyStatistics(
+            lethality_percentage=self._calculate_lethality_percentage(summary),
+            sex_distribution=sex_distribution,
+            sex_missing_percentage=sex_missing_percentage,
+            age_mean=age_mean,
+            age_std=age_std,
+            nihss_mean=nihss_mean,
+            nihss_std=nihss_std,
+            nihss_missing_percentage=nihss_missing_percentage,
+            time_distribution=time_distribution,
+            time_missing_percentage=time_missing_percentage,
+            dsa_positive_percentage=dsa_positive_percentage,
+            dsa_missing_percentage=dsa_missing_percentage,
+        )
+
+    def get_statistics(self) -> ds.StudyStatistics:
+        """Return the catalog's precomputed statistics."""
+        return self._statistics
 
     def get_lethality_percentage(self) -> float:
         """
         @brief Return the percentage of lethality values of the study catalog.
         @return: The float produced by this operation."""
-        return self._lethality_percentage
+        return self._statistics.lethality_percentage
 
     def get_sex_distribution(self) -> dict[str, float]:
         """
         @brief Return the distribution of sex values in the study catalog.
         @return: The dict[str, float] produced by this operation.
         """
-        return self._sex_distribution
+        return self._statistics.sex_distribution
 
     def get_sex_missing_count(self) -> float:
         """
         @brief Return the number of missing sex values in the study catalog.
         @return: The number of missing sex values.
         """
-        return self._sex_missing_count
+        return self._statistics.sex_missing_percentage
 
     def get_age_distribution(self) -> tuple[float, float]:
         """
         @brief Return the distribution of age values in the study catalog.
         @return: The tuple[float, float] produced by this operation.
         """
-        return self._age_distribution
+        return self._statistics.age_mean, self._statistics.age_std
 
     def get_nihss_distribution(self) -> tuple[float, float, float]:
         """
         @brief Return NIHSS mean, standard deviation, and missing-value percentage.
         @return: The mean, standard deviation, and missing percentage.
         """
-        return self._nihss_distribution
+        return (
+            self._statistics.nihss_mean,
+            self._statistics.nihss_std,
+            self._statistics.nihss_missing_percentage,
+        )
 
     def get_time_distribution(self) -> dict[str, float]:
         """
         @brief Return the percentage distribution of observed time ranges.
         @return: A dictionary mapping time ranges to percentages.
         """
-        return self._time_distribution
+        return self._statistics.time_distribution
 
     def get_time_missing_percentage(self) -> float:
         """
         @brief Return the percentage of studies with a missing time range.
         @return: The percentage of missing time ranges.
         """
-        return self._time_missing_percentage
+        return self._statistics.time_missing_percentage
 
     def get_dsa_percentage(self) -> float:
         """
         @brief Return the percentage of studies with a positive DSA value.
         @return: The percentage of positive DSA values.
         """
-        return self._dsa_percentage
+        return self._statistics.dsa_positive_percentage
 
     def get_dsa_missing_percentage(self) -> float:
         """
         @brief Return the percentage of studies with a missing DSA value.
         @return: The percentage of missing DSA values.
         """
-        return self._dsa_missing_percentage
+        return self._statistics.dsa_missing_percentage
 
     @missing_feature_df
     def _calculate_lethality_percentage(self, df: pd.DataFrame) -> float:

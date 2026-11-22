@@ -38,4 +38,4 @@ if __name__ == "__main__":
             data_manager.create_volume_tacs()
 
     # Check the balance of lethality values in the study catalog
-    data_manager.check_studies_catalog_lethality_balance()
+    data_manager.check_studies_catalog_statistics()

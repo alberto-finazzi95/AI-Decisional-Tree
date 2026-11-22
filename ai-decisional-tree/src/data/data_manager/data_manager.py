@@ -607,40 +607,33 @@ class DataManager:
         """
         return self._study_catalog.studies
 
-    def check_studies_catalog_lethality_balance(self):
+    def check_studies_catalog_statistics(self):
         """
-        @brief Check the balance of lethality values in the study catalog.
-        @return: The bool produced by this operation.
+        @brief Print summary statistics for every dataset split.
         """
         for dataset_type, study_catalog in self._data_loader.get_all_study_catalog().items():
-            # Lethality percentage calculation
-            lethality_percentage: float = study_catalog.get_lethality_percentage()
-            print(f"[{dataset_type.name}] Lethality balance: {lethality_percentage}%")
-            # Age distribution and sex percentage calculation
-            age_mean, age_std = study_catalog.get_age_distribution()
-            nihss_mean, nihss_std, nihss_missing_percentage = study_catalog.get_nihss_distribution()
-            sex_distribution: dict[str, float] = study_catalog.get_sex_distribution()
-            print(f"[{dataset_type.name}] Age mean: {age_mean}, Age std: {age_std}")
+            statistics: dcm.StudyStatistics = study_catalog.get_statistics()
+            print(f"[{dataset_type.name}] Lethality balance: {statistics.lethality_percentage}%")
+            print(f"[{dataset_type.name}] Age mean: {statistics.age_mean}, Age std: {statistics.age_std}")
             print(
-                f"[{dataset_type.name}] NIHSS mean: {nihss_mean}, std: {nihss_std}, "
-                f"missing values: {nihss_missing_percentage:.2f}%"
+                f"[{dataset_type.name}] NIHSS mean: {statistics.nihss_mean}, std: {statistics.nihss_std}, "
+                f"missing values: {statistics.nihss_missing_percentage:.2f}%"
             )
             sex_distribution_text: str = ", ".join(
-                f"{sex}: {percentage:.2f}%" for sex, percentage in sex_distribution.items()
+                f"{sex}: {percentage:.2f}%" for sex, percentage in statistics.sex_distribution.items()
             )
             print(
                 f"[{dataset_type.name}] Sex distribution: {sex_distribution_text or 'no values'}, "
-                f"missing values: {study_catalog.get_sex_missing_count()}%"
+                f"missing values: {statistics.sex_missing_percentage:.2f}%"
             )
-            time_distribution: dict[str, float] = study_catalog.get_time_distribution()
             time_distribution_text: str = ", ".join(
-                f"{time_range}: {percentage:.2f}%" for time_range, percentage in time_distribution.items()
+                f"{time_range}: {percentage:.2f}%" for time_range, percentage in statistics.time_distribution.items()
             )
             print(
                 f"[{dataset_type.name}] Time-range distribution: {time_distribution_text or 'no values'}, "
-                f"missing values: {study_catalog.get_time_missing_percentage():.2f}%"
+                f"missing values: {statistics.time_missing_percentage:.2f}%"
             )
             print(
-                f"[{dataset_type.name}] DSA positive: {study_catalog.get_dsa_percentage():.2f}%, "
-                f"missing values: {study_catalog.get_dsa_missing_percentage():.2f}%"
+                f"[{dataset_type.name}] DSA positive: {statistics.dsa_positive_percentage:.2f}%, "
+                f"missing values: {statistics.dsa_missing_percentage:.2f}%"
             )

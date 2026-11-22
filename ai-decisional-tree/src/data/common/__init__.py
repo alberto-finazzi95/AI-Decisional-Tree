@@ -14,6 +14,7 @@ from .data_structures import (
     ImageState,
     ImageStateToolkit,
     Study,
+    StudyStatistics,
 )
 from .study_catalog import StudyCatalog
 
@@ -25,6 +26,7 @@ __all__ = [
     "OUT_FEATURE",
     "DatasetType",
     "Study",
+    "StudyStatistics",
     "StudyCatalog",
     "Flag",
     "ImageRange",

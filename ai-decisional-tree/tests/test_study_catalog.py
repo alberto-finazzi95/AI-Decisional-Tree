@@ -83,6 +83,24 @@ class StudyCatalogTests(unittest.TestCase):
         self.assertEqual(study.num_subfolders, 2)
         self.assertEqual(study.subfolders, self.SUBFOLDERS)
 
+    def test_get_statistics_returns_aggregated_catalog_statistics(self):
+        """Tests that all computed catalog statistics are exposed in one dataclass."""
+        statistics = self.catalog.get_statistics()
+
+        self.assertIsInstance(statistics, dcm.StudyStatistics)
+        self.assertEqual(statistics.lethality_percentage, 50.0)
+        self.assertEqual(statistics.sex_distribution, {"F": 50.0, "M": 50.0})
+        self.assertEqual(statistics.sex_missing_percentage, 0.0)
+        self.assertEqual(statistics.age_mean, 78.5)
+        self.assertEqual(statistics.age_std, 6.5)
+        self.assertEqual(statistics.nihss_mean, 5.5)
+        self.assertEqual(statistics.nihss_std, 1.5)
+        self.assertEqual(statistics.nihss_missing_percentage, 0.0)
+        self.assertEqual(statistics.time_distribution, {"0.0-24.0": 50.0, "24.0-48.0": 50.0})
+        self.assertEqual(statistics.time_missing_percentage, 0.0)
+        self.assertEqual(statistics.dsa_positive_percentage, 50.0)
+        self.assertEqual(statistics.dsa_missing_percentage, 0.0)
+
     def test_get_subfolders_returns_normalized_folder_names(self):
         """Tests that subfolder names are returned as a tuple."""
         self.assertEqual(
