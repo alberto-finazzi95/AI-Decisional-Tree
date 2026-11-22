@@ -613,5 +613,17 @@ class DataManager:
         @return: The bool produced by this operation.
         """
         for dataset_type, study_catalog in self._data_loader.get_all_study_catalog().items():
+            # Lethality percentage calculation
             lethality_percentage: float = study_catalog.get_lethality_percentage()
             print(f"[{dataset_type.name}] Lethality balance: {lethality_percentage}%")
+            # Age distribution and sex percentage calculation
+            age_mean, age_std = study_catalog.get_age_distribution()
+            sex_distribution: dict[str, float] = study_catalog.get_sex_distribution()
+            print(f"[{dataset_type.name}] Age mean: {age_mean}, Age std: {age_std}")
+            sex_distribution_text: str = ", ".join(
+                f"{sex}: {percentage:.2f}%" for sex, percentage in sex_distribution.items()
+            )
+            print(
+                f"[{dataset_type.name}] Sex distribution: {sex_distribution_text or 'no values'}, "
+                f"missing values: {study_catalog.get_sex_missing_count()}%"
+            )

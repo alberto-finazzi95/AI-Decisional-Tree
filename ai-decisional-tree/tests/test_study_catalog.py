@@ -1,5 +1,6 @@
 import unittest
 
+import numpy as np
 import pandas as pd
 import src.data.common as dcm
 import src.data.common.exceptions as ex
@@ -123,6 +124,36 @@ class StudyCatalogTests(unittest.TestCase):
         self.assertEqual(study.path, "")
         self.assertEqual(study.num_subfolders, 0)
         self.assertEqual(study.subfolders, ())
+
+    def test_sex_distribution_counts_missing_values(self):
+        """Tests that missing sex values are counted separately from percentages."""
+        catalog = dcm.StudyCatalog(
+            pd.DataFrame(
+                [
+                    {
+                        dcm.Feature.NAME: "female",
+                        dcm.Feature.SEX: "F",
+                        dcm.Feature.LETHALITY: False,
+                        dcm.Feature.AGE: 50,
+                    },
+                    {
+                        dcm.Feature.NAME: "male",
+                        dcm.Feature.SEX: "M",
+                        dcm.Feature.LETHALITY: False,
+                        dcm.Feature.AGE: 60,
+                    },
+                    {
+                        dcm.Feature.NAME: "missing",
+                        dcm.Feature.SEX: pd.NA,
+                        dcm.Feature.LETHALITY: False,
+                        dcm.Feature.AGE: 70,
+                    },
+                ]
+            )
+        )
+
+        self.assertEqual(catalog.get_sex_distribution(), {"F": 33.33, "M": 33.33})
+        self.assertEqual(np.around(catalog.get_sex_missing_count(), 2), 33.33)
 
     def test_unknown_study_raises_study_not_found_error(self):
         """Tests that looking up an unknown identifier raises the expected error."""

@@ -38,9 +38,13 @@ class StudyCatalog:
             )
             for _, row in summary.iterrows()
         }
+        # Number of studies indexed by this catalog
+        self._num_studies: int = len(self._studies)
         # Get the percentage of lethality values that are true or false
         self._lethality_percentage: float = self._calculate_lethality_percentage(summary)
-        #
+        # Sex and age distributions
+        self._sex_distribution, self._sex_missing_count = self._set_sex_distribution(summary)
+        self._age_distribution: tuple[float, float] = self._set_age_distribution(summary)
 
     def get_lethality_percentage(self) -> float:
         """
@@ -48,15 +52,77 @@ class StudyCatalog:
         @return: The float produced by this operation."""
         return self._lethality_percentage
 
-    @staticmethod
-    def _calculate_lethality_percentage(df: pd.DataFrame) -> float:
+    def get_sex_distribution(self) -> dict[str, float]:
+        """
+        @brief Return the distribution of sex values in the study catalog.
+        @return: The dict[str, float] produced by this operation.
+        """
+        return self._sex_distribution
+
+    def get_sex_missing_count(self) -> float:
+        """
+        @brief Return the number of missing sex values in the study catalog.
+        @return: The number of missing sex values.
+        """
+        return self._sex_missing_count
+
+    def get_age_distribution(self) -> tuple[float, float]:
+        """
+        @brief Return the distribution of age values in the study catalog.
+        @return: The tuple[float, float] produced by this operation.
+        """
+        return self._age_distribution
+
+    def _calculate_lethality_percentage(self, df: pd.DataFrame) -> float:
         """
         @brief Calculate the percentage of lethality values that are true or false.
         @param df: Dataset summary DataFrame.
         @return: The float produced by this operation.
         """
-        lethality: float = df[ds.Feature.LETHALITY].sum() / len(df[ds.Feature.LETHALITY]) * 100.0
-        return np.round(lethality, 2)
+        lethality: float = self._percentage(df[ds.Feature.LETHALITY].sum())
+        return self._round_value(lethality)
+
+    def _set_sex_distribution(self, df: pd.DataFrame) -> tuple[dict[str, float], float]:
+        """
+        @brief Calculate the distribution of sex values in the dataset summary.
+        @param df: Dataset summary DataFrame.
+        @return: The sex distribution percentages and number of missing values.
+        """
+        sex_values: pd.Series = df[ds.Feature.SEX]
+        missing_sex_count: float = self._percentage(sex_values.isna().sum())
+        distribution: dict[str, float] = {
+            sex: self._round_value(self._percentage(count)) for sex, count in sex_values.value_counts().items()
+        }
+        return distribution, self._round_value(missing_sex_count)
+
+    def _set_age_distribution(self, df: pd.DataFrame) -> tuple[float, float]:
+        """
+        @brief Calculate the distribution of age values in the dataset summary.
+        @param df: Dataset summary DataFrame.
+        @return: A tuple containing the mean and standard deviation of age values.
+        """
+        age_values: pd.Series = df[ds.Feature.AGE]
+        mean_age: float = np.mean(age_values)
+        std_age: float = np.std(age_values)
+        return self._round_value(mean_age), self._round_value(std_age)
+
+    @staticmethod
+    def _round_value(value: float, decimals: int = 2) -> float:
+        """
+        @brief Round a float value to the specified number of decimal places.
+        @param value: The float value to round.
+        @param decimals: The number of decimal places to round to (default is 2).
+        @return: The rounded float value.
+        """
+        return np.around(value, decimals)
+
+    def _percentage(self, value: float) -> float:
+        """
+        @brief Calculate the percentage of a value relative to a total.
+        @param value: The value to calculate the percentage for.
+        @return: The calculated percentage as a float.
+        """
+        return (value / self._num_studies) * 100.0
 
     @staticmethod
     def _import_subfolders(subfolders_str: str) -> tuple[str, ...]:
